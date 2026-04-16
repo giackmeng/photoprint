@@ -68,7 +68,6 @@ class DeviceLimitService:
         if not ip:
             return None
 
-        # prova prima con ip neigh
         try:
             result = subprocess.run(
                 ["ip", "neigh", "show", ip],
@@ -83,7 +82,6 @@ class DeviceLimitService:
         except Exception:
             pass
 
-        # fallback arp -n
         try:
             result = subprocess.run(
                 ["arp", "-n", ip],

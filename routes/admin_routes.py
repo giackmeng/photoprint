@@ -18,7 +18,16 @@ from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps
 
 
-def register_admin_routes(app, paths, config_service, template_service, job_manager, image_service, admin_required):
+def register_admin_routes(app,
+     paths, 
+     config_service, 
+     template_service, 
+     job_manager, 
+     image_service, 
+     admin_required,
+     device_limit_service,
+     print_quota_service,
+     ):
     @app.route("/admin/login", methods=["GET", "POST"])
     def admin_login():
         config = config_service.load_config()
@@ -401,6 +410,7 @@ def register_admin_routes(app, paths, config_service, template_service, job_mana
         job_manager.print_queue.put(new_job_id)
         return jsonify({"success": True, "message": "Ristampa ultimo job aggiunta in coda"})
 
+
     @app.route("/admin/cancel/<job_id>", methods=["POST"])
     def admin_cancel(job_id):
         if not admin_required():
@@ -456,8 +466,10 @@ def register_admin_routes(app, paths, config_service, template_service, job_mana
         if not os.path.exists(path):
             return jsonify({"success": False, "message": "File template non trovato"}), 404
 
-        return send_file(path)    
-      @app.route("/admin/template-render-preview", methods=["POST"])
+        return send_file(path)  
+
+
+    @app.route("/admin/template-render-preview", methods=["POST"])
     def admin_template_render_preview():
         if not admin_required():
             return jsonify({"success": False, "message": "Non autorizzato"}), 403
@@ -546,4 +558,94 @@ def register_admin_routes(app, paths, config_service, template_service, job_mana
             })
 
         except Exception as e:
-            return jsonify({"success": False, "message": f"Errore render preview: {str(e)}"}), 500      
+            return jsonify({"success": False, "message": f"Errore rendering: {str(e)}"}), 500
+
+
+    @app.route("/admin/device-limits", methods=["GET"])
+    def admin_device_limits():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        return jsonify({
+            "success": True,
+            "max_prints_per_mac": device_limit_service.get_global_limit(),
+            "devices": device_limit_service.list_devices()
+        })
+
+
+    @app.route("/admin/device-limits/config", methods=["POST"])
+    def admin_device_limits_config():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        try:
+            limit = int(request.form.get("max_prints_per_mac", "3"))
+            if limit < 1 or limit > 500:
+                return jsonify({"success": False, "message": "Limite non valido"}), 400
+
+            device_limit_service.set_global_limit(limit)
+            return jsonify({"success": True, "message": "Limite per MAC aggiornato"})
+        except Exception:
+            return jsonify({"success": False, "message": "Valore non valido"}), 400
+
+
+    @app.route("/admin/device-limits/reset", methods=["POST"])
+    def admin_device_limits_reset():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        mac = request.form.get("mac", "").strip()
+        ok = device_limit_service.reset_device(mac)
+
+        if not ok:
+            return jsonify({"success": False, "message": "MAC non valido"}), 400
+
+        return jsonify({"success": True, "message": "Contatore dispositivo azzerato"})
+
+    
+    @app.route("/admin/print-quotas", methods=["GET"])
+    def admin_print_quotas():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        return jsonify({
+            "success": True,
+            "event_code": print_quota_service.get_event_code(),
+            "default_limit_per_identity": print_quota_service.get_default_limit(),
+            "records": print_quota_service.list_records()
+        })
+
+    
+    @app.route("/admin/print-quotas/config", methods=["POST"])
+    def admin_print_quotas_config():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        try:
+            event_code = request.form.get("event_code", "").strip()
+            limit = int(request.form.get("default_limit_per_identity", "3"))
+
+            if limit < 1 or limit > 500:
+                return jsonify({"success": False, "message": "Limite non valido"}), 400
+
+            print_quota_service.set_event_code(event_code or "EVENTO2026")
+            print_quota_service.set_default_limit(limit)
+
+            return jsonify({"success": True, "message": "Configurazione quote aggiornata"})
+        except Exception:
+            return jsonify({"success": False, "message": "Valori non validi"}), 400
+
+    
+    @app.route("/admin/print-quotas/reset", methods=["POST"])
+    def admin_print_quotas_reset():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        identity_key = request.form.get("identity_key", "").strip()
+        if not identity_key:
+            return jsonify({"success": False, "message": "Identity key mancante"}), 400
+
+        print_quota_service.reset_identity(identity_key)
+        return jsonify({"success": True, "message": "Quota dispositivo azzerata"})
+
+        

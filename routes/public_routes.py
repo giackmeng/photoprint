@@ -1,6 +1,6 @@
 import os
 
-from flask import render_template, request, jsonify, url_for
+from flask import render_template, request, jsonify, url_for, make_response
 from werkzeug.utils import secure_filename
 
 
@@ -12,6 +12,8 @@ def register_public_routes(
     job_manager,
     image_service,
     device_limit_service,
+    device_identity_service,
+    print_quota_service,
 ):
     @app.route("/", methods=["GET"])
     def home():
@@ -23,7 +25,9 @@ def register_public_routes(
         image_service.cleanup_old_files(paths.PREVIEW_FOLDER, max_age_seconds)
         job_manager.cleanup_old_jobs(max_age_seconds)
 
-        return render_template("index.html", config=config)
+        response = make_response(render_template("index.html", config=config))
+        device_identity_service.get_or_create_browser_token(request, response)
+        return response
 
     @app.route("/success/<job_id>", methods=["GET"])
     def success(job_id):
@@ -58,21 +62,23 @@ def register_public_routes(
     @app.route("/device-print-limit", methods=["GET"])
     def device_print_limit():
         client_ip, client_mac = device_limit_service.get_client_mac(request)
+        browser_token = device_identity_service.get_or_create_browser_token(request)
+        event_code = print_quota_service.get_event_code()
 
-        if not client_mac:
-            return jsonify({
-                "success": False,
-                "ip": client_ip,
-                "mac": None,
-                "message": "MAC address non disponibile"
-            }), 200
+        identity_key = device_identity_service.build_identity_key(
+            event_code=event_code,
+            browser_token=browser_token,
+            mac=client_mac,
+            ip=client_ip,
+        )
 
         return jsonify({
             "success": True,
             "ip": client_ip,
             "mac": client_mac,
-            "remaining": device_limit_service.get_remaining(client_mac),
-            "limit": device_limit_service.get_global_limit()
+            "event_code": event_code,
+            "remaining": print_quota_service.get_remaining(identity_key),
+            "limit": print_quota_service.get_default_limit(),
         })
 
     @app.route("/preview-multiple", methods=["POST"])
@@ -151,19 +157,24 @@ def register_public_routes(
             return jsonify({"success": False, "message": "Formato stampa non valido"}), 400
 
         client_ip, client_mac = device_limit_service.get_client_mac(request)
+        browser_token = device_identity_service.get_or_create_browser_token(request)
+        event_code = print_quota_service.get_event_code()
 
-        if not client_mac:
-            return jsonify({
-                "success": False,
-                "message": "Impossibile identificare il dispositivo sulla rete Wi-Fi"
-            }), 400
+        identity_key = device_identity_service.build_identity_key(
+            event_code=event_code,
+            browser_token=browser_token,
+            mac=client_mac,
+            ip=client_ip,
+        )
 
         try:
-            # Caso STRIP: 1 job unico, conta il numero copie
             if print_format == "strip":
-                allowed, msg = device_limit_service.can_print(client_mac, copies)
+                allowed, remaining_before = print_quota_service.can_print(identity_key, copies)
                 if not allowed:
-                    return jsonify({"success": False, "message": msg}), 400
+                    return jsonify({
+                        "success": False,
+                        "message": f"Limite raggiunto per questo dispositivo. Rimanenti: {remaining_before}"
+                    }), 400
 
                 original_paths = []
 
@@ -193,23 +204,36 @@ def register_public_routes(
                 )
 
                 job_manager.print_queue.put(job_id)
-                device_limit_service.register_print(client_mac, copies)
+
+                print_quota_service.register_print(
+                    identity_key,
+                    copies,
+                    meta={
+                        "ip": client_ip,
+                        "mac": client_mac,
+                        "browser_token": browser_token,
+                        "event_code": event_code
+                    }
+                )
 
                 return jsonify({
                     "success": True,
                     "message": f"Strip creata con {len(original_paths)} foto e inviata alla coda di stampa",
                     "job_ids": [job_id],
                     "redirect": url_for("success", job_id=job_id),
-                    "remaining_prints": device_limit_service.get_remaining(client_mac),
+                    "remaining_prints": print_quota_service.get_remaining(identity_key),
                     "client_ip": client_ip,
                     "client_mac": client_mac,
+                    "event_code": event_code,
                 })
 
-            # Caso 10x15: conta foto * copie
             requested_total = len(valid_files) * copies
-            allowed, msg = device_limit_service.can_print(client_mac, requested_total)
+            allowed, remaining_before = print_quota_service.can_print(identity_key, requested_total)
             if not allowed:
-                return jsonify({"success": False, "message": msg}), 400
+                return jsonify({
+                    "success": False,
+                    "message": f"Limite raggiunto per questo dispositivo. Rimanenti: {remaining_before}"
+                }), 400
 
             created_jobs = []
 
@@ -237,16 +261,26 @@ def register_public_routes(
             if not created_jobs:
                 return jsonify({"success": False, "message": "Nessun file valido da stampare"}), 400
 
-            device_limit_service.register_print(client_mac, requested_total)
+            print_quota_service.register_print(
+                identity_key,
+                requested_total,
+                meta={
+                    "ip": client_ip,
+                    "mac": client_mac,
+                    "browser_token": browser_token,
+                    "event_code": event_code
+                }
+            )
 
             return jsonify({
                 "success": True,
                 "message": f"{len(created_jobs)} foto inviate correttamente alla coda di stampa",
                 "job_ids": created_jobs,
                 "redirect": url_for("success", job_id=created_jobs[0]),
-                "remaining_prints": device_limit_service.get_remaining(client_mac),
+                "remaining_prints": print_quota_service.get_remaining(identity_key),
                 "client_ip": client_ip,
                 "client_mac": client_mac,
+                "event_code": event_code,
             })
 
         except Exception as e:

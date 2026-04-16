@@ -19,6 +19,8 @@ from services.job_manager import JobManager
 from services.image_render_service import ImageRenderService
 from services.print_worker import PrintWorker
 from services.device_limit_service import DeviceLimitService
+from services.device_identity_service import DeviceIdentityService
+from services.print_quota_service import PrintQuotaService
 
 from routes.public_routes import register_public_routes
 from routes.admin_routes import register_admin_routes
@@ -36,6 +38,8 @@ def create_app():
     job_manager = JobManager()
     image_service = ImageRenderService(paths, template_service)
     device_limit_service = DeviceLimitService(config_service)
+    device_identity_service = DeviceIdentityService()
+    print_quota_service = PrintQuotaService(paths)
 
     # Flask app
     app = Flask(__name__)
@@ -59,6 +63,8 @@ def create_app():
         job_manager=job_manager,
         image_service=image_service,
         device_limit_service=device_limit_service,
+        device_identity_service=device_identity_service,
+        print_quota_service=print_quota_service,
     )
 
     register_admin_routes(
@@ -70,6 +76,8 @@ def create_app():
         image_service=image_service,
         admin_required=admin_required,
         device_limit_service=device_limit_service,
+        device_identity_service=device_identity_service,
+        print_quota_service=print_quota_service,
     )
 
     return app
