@@ -30,6 +30,7 @@
       position: sticky;
       top: 0;
       height: 100vh;
+      overflow-y: auto;
     }
 
     .sidebar-brand {
@@ -68,6 +69,7 @@
       cursor: pointer;
       font-weight: bold;
       transition: 0.2s ease;
+      margin: 0;
     }
 
     .nav-item:hover {
@@ -89,12 +91,6 @@
       gap: 10px;
     }
 
-    .sidebar-release{
-       color: rgba(255,255,255,0.82);
-      margin-top: 15px;
-      font-size: 10px;
-    }
-
     .sidebar-link {
       color: rgba(255,255,255,0.82);
       text-decoration: none;
@@ -107,22 +103,26 @@
 
     .admin-main {
       flex: 1;
-      padding: 24px;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
     }
 
     .wrap {
-      max-width: 1280px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 900px;
     }
 
     h1 {
       margin: 0 0 6px;
       font-size: 30px;
+      text-align: center;
     }
 
     .sub {
       color: #6f675f;
-      margin-bottom: 18px;
+      margin-bottom: 24px;
+      text-align: center;
     }
 
     .stats {
@@ -146,10 +146,7 @@
     }
 
     .grid {
-      display: grid;
-      grid-template-columns: 1.08fr 0.92fr;
-      gap: 20px;
-      margin-bottom: 20px;
+      display: block;
     }
 
     .card {
@@ -157,7 +154,10 @@
       border-radius: 20px;
       padding: 18px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
+      margin-bottom: 24px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .admin-section {
@@ -191,6 +191,7 @@
       box-sizing: border-box;
       margin-bottom: 12px;
       background: #fff;
+      font: inherit;
     }
 
     button, a.btn {
@@ -205,6 +206,7 @@
       display: inline-block;
       margin-right: 8px;
       margin-bottom: 8px;
+      font: inherit;
     }
 
     .muted {
@@ -213,11 +215,12 @@
     }
 
     .status {
-      margin: 14px 0 20px;
+      margin: 14px auto 20px;
       padding: 12px 14px;
       border-radius: 12px;
       background: #efe8df;
       color: #4f473f;
+      max-width: 720px;
     }
 
     .two-col {
@@ -233,6 +236,8 @@
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+      max-width: 1100px;
+      margin: 0 auto;
     }
 
     th, td {
@@ -262,28 +267,6 @@
     .done { background: #e4f5e8; }
     .error { background: #fde7e5; }
 
-    .preview-box {
-      position: absolute;
-      border: 2px solid rgba(200, 40, 40, 0.95);
-      background: rgba(200, 40, 40, 0.12);
-      border-radius: 8px;
-      box-sizing: border-box;
-      pointer-events: none;
-    }
-
-    .preview-box-label {
-      position: absolute;
-      top: -22px;
-      left: 0;
-      background: rgba(200, 40, 40, 0.95);
-      color: white;
-      font-size: 11px;
-      padding: 3px 6px;
-      border-radius: 6px;
-      line-height: 1;
-      white-space: nowrap;
-    }
-
     .helper {
       font-size: 12px;
       color: #7a7268;
@@ -305,6 +288,47 @@
       word-break: break-all;
     }
 
+    .preview-box {
+      position: absolute;
+      border: 2px solid rgba(200, 40, 40, 0.95);
+      background: rgba(200, 40, 40, 0.12);
+      border-radius: 8px;
+      box-sizing: border-box;
+      cursor: move;
+      touch-action: none;
+      pointer-events: auto;
+    }
+
+    .preview-box-label {
+      position: absolute;
+      top: -22px;
+      left: 0;
+      background: rgba(200, 40, 40, 0.95);
+      color: white;
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 6px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .preview-resize-handle {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      right: -8px;
+      bottom: -8px;
+      background: rgba(200, 40, 40, 0.95);
+      border-radius: 50%;
+      cursor: nwse-resize;
+    }
+
+    code {
+      background: #f4efe8;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
     @media (max-width: 980px) {
       .admin-layout {
         flex-direction: column;
@@ -320,10 +344,14 @@
         padding: 18px;
       }
 
-      .grid,
       .stats,
       .two-col {
         grid-template-columns: 1fr;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
       }
     }
   </style>
@@ -342,16 +370,15 @@
         <button class="nav-item" onclick="showSection('section-active-templates', this)">Template attivi</button>
         <button class="nav-item" onclick="showSection('section-upload-template', this)">Upload template</button>
         <button class="nav-item" onclick="showSection('section-quick-actions', this)">Azioni rapide</button>
-       <button class="nav-item" onclick="showSectionGroup(['section-photo-boxes','section-template-preview','section-real-preview'], this)">Editor template</button>
+        <button class="nav-item" onclick="showSectionGroup(['section-photo-boxes','section-template-preview','section-real-preview'], this)">Editor template</button>
         <button class="nav-item" onclick="showSection('section-advanced-quota', this)">Quote / Limiti</button>
-        <button class="nav-item" onclick="showSection('section-jobs', this)">Job</button>
         <button class="nav-item" onclick="showSection('section-event-qr', this)">QR evento</button>
+        <button class="nav-item" onclick="showSection('section-jobs', this)">Job</button>
       </nav>
 
       <div class="sidebar-footer">
         <a class="sidebar-link" href="/admin/export">Esporta CSV</a>
         <a class="sidebar-link" href="/admin/logout">Logout</a>
-        <div class="sidebar-release">Versione 1.0.0</div>
       </div>
     </aside>
 
@@ -372,256 +399,251 @@
         <div class="status" id="statusBox">Pannello pronto.</div>
 
         <div class="grid">
-          <div>
-            <div class="card admin-section" id="section-config">
-              <h3>Configurazione evento</h3>
-              <form id="configForm">
-                <label>Nome stampante</label>
-                <input name="printer_name" value="{{ config.printer_name }}" required>
+          <div class="card admin-section" id="section-config">
+            <h3>Configurazione evento</h3>
+            <form id="configForm">
+              <label>Nome stampante</label>
+              <input name="printer_name" value="{{ config.printer_name }}" required>
 
-                <label>Brand</label>
-                <input name="brand_name" value="{{ config.brand_name }}" required>
+              <label>Brand</label>
+              <input name="brand_name" value="{{ config.brand_name }}" required>
 
-                <label>Tagline</label>
-                <input name="brand_tagline" value="{{ config.brand_tagline }}" required>
+              <label>Tagline</label>
+              <input name="brand_tagline" value="{{ config.brand_tagline }}" required>
 
-                <label>Nome evento</label>
-                <input name="event_name" value="{{ config.event_name }}" required>
+              <label>Nome evento</label>
+              <input name="event_name" value="{{ config.event_name }}" required>
 
-                <label>Data evento</label>
-                <input name="event_date" value="{{ config.event_date }}" required>
+              <label>Data evento</label>
+              <input name="event_date" value="{{ config.event_date }}" required>
 
+              <div class="two-col">
+                <div>
+                  <label>Max copie</label>
+                  <input name="max_copies" type="number" min="1" max="20" value="{{ config.max_copies }}" required>
+                </div>
+                <div>
+                  <label>Ore conservazione file</label>
+                  <input name="max_file_age_hours" type="number" min="1" max="168" value="{{ config.max_file_age_hours }}" required>
+                </div>
+              </div>
+
+              <button type="submit">Salva configurazione</button>
+            </form>
+          </div>
+
+          <div class="card admin-section" id="section-active-templates">
+            <h3>Template attivi</h3>
+            <form id="templatesForm">
+              <label for="active_template_10x15">Template 10x15</label>
+              <select name="active_template_10x15" id="active_template_10x15" required>
+                {% for tpl in templates_10x15 %}
+                  <option value="{{ tpl.id }}" {% if templates_cfg.active_template_10x15 == tpl.id %}selected{% endif %}>
+                    {{ tpl.label }} ({{ tpl.id }})
+                  </option>
+                {% endfor %}
+              </select>
+
+              <label for="active_template_strip">Template strip</label>
+              <select name="active_template_strip" id="active_template_strip" required>
+                {% for tpl in templates_strip %}
+                  <option value="{{ tpl.id }}" {% if templates_cfg.active_template_strip == tpl.id %}selected{% endif %}>
+                    {{ tpl.label }} ({{ tpl.id }})
+                  </option>
+                {% endfor %}
+              </select>
+
+              <button type="submit">Salva template attivi</button>
+            </form>
+          </div>
+
+          <div class="card admin-section" id="section-upload-template">
+            <h3>Carica template Canva / Photoshop</h3>
+
+            <form id="templateUploadForm">
+              <label>ID template</label>
+              <input type="text" name="template_id" placeholder="es. wedding_canva_01" required>
+
+              <label>Nome visibile</label>
+              <input type="text" name="label" placeholder="es. Wedding Canva 01" required>
+
+              <label>Formato</label>
+              <select name="print_format" required>
+                <option value="10x15">10x15</option>
+                <option value="strip">Strip</option>
+              </select>
+
+              <label>Tipo template</label>
+              <select name="mode" required>
+                <option value="image_template">Template singolo</option>
+                <option value="image_template_multi">Template multi-box</option>
+              </select>
+
+              <label>File template</label>
+              <input type="file" name="template_file" accept=".png,.jpg,.jpeg,.webp" required>
+
+              <button type="submit">Carica template</button>
+            </form>
+
+            <p class="helper">
+              Dimensioni richieste: 10x15 = 1200x1800 px · strip = 600x1800 px
+            </p>
+          </div>
+
+          <div class="card admin-section" id="section-quick-actions">
+            <h3>Azioni rapide</h3>
+            <button id="refreshBtn">Aggiorna storico</button>
+            <button id="reprintLastBtn">Ristampa ultimo job</button>
+            <button id="cleanupBtn" class="muted">Pulizia</button>
+
+            <hr style="margin:18px 0;border:none;border-top:1px solid #eee7df;">
+
+            <h3>Upload logo</h3>
+            <form id="logoForm">
+              <input type="file" name="logo" accept="image/*" required>
+              <button type="submit">Carica logo</button>
+            </form>
+          </div>
+
+          <div class="card admin-section" id="section-photo-boxes">
+            <h3>Editor template</h3>
+
+            <form id="templateBoxesForm">
+              <label for="edit_template_id">Template</label>
+              <select name="template_id" id="edit_template_id" required></select>
+
+              <label for="edit_photo_fit">Photo fit</label>
+              <select name="photo_fit" id="edit_photo_fit">
+                <option value="cover">cover</option>
+                <option value="contain">contain</option>
+              </select>
+
+              <div id="singleBoxFields">
                 <div class="two-col">
                   <div>
-                    <label>Max copie</label>
-                    <input name="max_copies" type="number" min="1" max="20" value="{{ config.max_copies }}" required>
+                    <label>X</label>
+                    <input type="number" name="photo_x" id="photo_x">
                   </div>
                   <div>
-                    <label>Ore conservazione file</label>
-                    <input name="max_file_age_hours" type="number" min="1" max="168" value="{{ config.max_file_age_hours }}" required>
+                    <label>Y</label>
+                    <input type="number" name="photo_y" id="photo_y">
+                  </div>
+                  <div>
+                    <label>Larghezza</label>
+                    <input type="number" name="photo_w" id="photo_w">
+                  </div>
+                  <div>
+                    <label>Altezza</label>
+                    <input type="number" name="photo_h" id="photo_h">
                   </div>
                 </div>
+              </div>
 
-                <button type="submit">Salva configurazione</button>
-              </form>
+              <div id="multiBoxFields" style="display:none;">
+                <h4>Box 1</h4>
+                <div class="two-col">
+                  <input type="number" name="box1_x" id="box1_x" placeholder="X">
+                  <input type="number" name="box1_y" id="box1_y" placeholder="Y">
+                  <input type="number" name="box1_w" id="box1_w" placeholder="Larghezza">
+                  <input type="number" name="box1_h" id="box1_h" placeholder="Altezza">
+                </div>
+
+                <h4>Box 2</h4>
+                <div class="two-col">
+                  <input type="number" name="box2_x" id="box2_x" placeholder="X">
+                  <input type="number" name="box2_y" id="box2_y" placeholder="Y">
+                  <input type="number" name="box2_w" id="box2_w" placeholder="Larghezza">
+                  <input type="number" name="box2_h" id="box2_h" placeholder="Altezza">
+                </div>
+
+                <h4>Box 3</h4>
+                <div class="two-col">
+                  <input type="number" name="box3_x" id="box3_x" placeholder="X">
+                  <input type="number" name="box3_y" id="box3_y" placeholder="Y">
+                  <input type="number" name="box3_w" id="box3_w" placeholder="Larghezza">
+                  <input type="number" name="box3_h" id="box3_h" placeholder="Altezza">
+                </div>
+              </div>
+
+              <button type="submit">Salva box foto</button>
+            </form>
+          </div>
+
+          <div class="card admin-section" id="section-template-preview">
+            <h3>Anteprima box template</h3>
+
+            <div id="templatePreviewWrap" style="position:relative; width:100%; max-width:420px; margin:0 auto; user-select:none;">
+              <img id="templatePreviewImage" src="" alt="Anteprima template"
+                   style="width:100%; display:block; border-radius:16px; border:1px solid #ddd4ca;">
+              <div id="templatePreviewOverlay" style="position:absolute; inset:0;"></div>
             </div>
 
-            <div class="card admin-section" id="section-active-templates">
-              <h3>Template attivi</h3>
-              <form id="templatesForm">
-                <label for="active_template_10x15">Template 10x15</label>
-                <select name="active_template_10x15" id="active_template_10x15" required>
-                  {% for tpl in templates_10x15 %}
-                    <option value="{{ tpl.id }}"
-                      {% if templates_cfg.active_template_10x15 == tpl.id %}selected{% endif %}>
-                      {{ tpl.label }} ({{ tpl.id }})
-                    </option>
-                  {% endfor %}
-                </select>
+            <p class="helper" style="text-align:center; margin-top:10px;">
+              Trascina il box per spostarlo. Usa il pallino in basso a destra per ridimensionarlo.
+            </p>
+          </div>
 
-                <label for="active_template_strip">Template strip</label>
-                <select name="active_template_strip" id="active_template_strip" required>
-                  {% for tpl in templates_strip %}
-                    <option value="{{ tpl.id }}"
-                      {% if templates_cfg.active_template_strip == tpl.id %}selected{% endif %}>
-                      {{ tpl.label }} ({{ tpl.id }})
-                    </option>
-                  {% endfor %}
-                </select>
+          <div class="card admin-section" id="section-real-preview">
+            <h3>Preview reale template</h3>
 
-                <button type="submit">Salva template attivi</button>
-              </form>
-            </div>
+            <label for="testPhotoInput">Foto test</label>
+            <input type="file" id="testPhotoInput" accept="image/*">
 
-            <div class="card admin-section" id="section-upload-template">
-              <h3>Carica template Canva / Photoshop</h3>
-
-              <form id="templateUploadForm">
-                <label>ID template</label>
-                <input type="text" name="template_id" placeholder="es. wedding_canva_01" required>
-
-                <label>Nome visibile</label>
-                <input type="text" name="label" placeholder="es. Wedding Canva 01" required>
-
-                <label>Formato</label>
-                <select name="print_format" required>
-                  <option value="10x15">10x15</option>
-                  <option value="strip">Strip</option>
-                </select>
-
-                <label>Tipo template</label>
-                <select name="mode" required>
-                  <option value="image_template">Template singolo</option>
-                  <option value="image_template_multi">Template multi-box</option>
-                </select>
-
-                <label>File template</label>
-                <input type="file" name="template_file" accept=".png,.jpg,.jpeg,.webp" required>
-
-                <button type="submit">Carica template</button>
-              </form>
-
-              <p class="helper">
-                Dimensioni richieste: 10x15 = 1200x1800 px · strip = 600x1800 px
-              </p>
+            <div style="margin-top:14px; text-align:center;">
+              <img id="renderPreviewImg" alt="Preview reale template"
+                   style="max-width:100%; border-radius:12px; border:1px solid #ddd4ca; display:none;">
             </div>
           </div>
 
-          <div>
-            <div class="card admin-section" id="section-quick-actions">
-              <h3>Azioni rapide</h3>
-              <button id="refreshBtn">Aggiorna storico</button>
-              <button id="reprintLastBtn">Ristampa ultimo job</button>
-              <button id="cleanupBtn" class="muted">Pulizia</button>
+          <div class="card admin-section" id="section-advanced-quota">
+            <h3>Controllo stampe avanzato</h3>
 
-              <hr style="margin:18px 0;border:none;border-top:1px solid #eee7df;">
+            <form id="quotaConfigForm">
+              <label>Event Code (reset logico evento)</label>
+              <input type="text" name="event_code" id="event_code" placeholder="es. GIULIA-MARCO-2026">
 
-              <h3>Upload logo</h3>
-              <form id="logoForm">
-                <input type="file" name="logo" accept="image/*" required>
-                <button type="submit">Carica logo</button>
-              </form>
+              <label>Limite stampe per dispositivo</label>
+              <input type="number" name="default_limit_per_identity" id="default_limit_per_identity" min="1" max="100">
+
+              <button type="submit">Salva configurazione</button>
+            </form>
+
+            <div style="margin-top:20px;">
+              <h4>Dispositivi / identità</h4>
+              <div id="quotaDeviceList"></div>
+            </div>
+          </div>
+
+          <div class="card admin-section" id="section-event-qr">
+            <h3>QR Code evento</h3>
+
+            <div class="helper" style="margin-bottom:12px;">
+              Il QR punta automaticamente all'evento attivo con il parametro <code>?event=...</code>
             </div>
 
-            <div class="card admin-section" id="section-photo-boxes">
-              <h3>Modifica box foto template</h3>
-
-              <form id="templateBoxesForm">
-                <label for="edit_template_id">Template</label>
-                <select name="template_id" id="edit_template_id" required></select>
-
-                <label for="edit_photo_fit">Photo fit</label>
-                <select name="photo_fit" id="edit_photo_fit">
-                  <option value="cover">cover</option>
-                  <option value="contain">contain</option>
-                </select>
-
-                <div id="singleBoxFields">
-                  <div class="two-col">
-                    <div>
-                      <label>X</label>
-                      <input type="number" name="photo_x" id="photo_x">
-                    </div>
-                    <div>
-                      <label>Y</label>
-                      <input type="number" name="photo_y" id="photo_y">
-                    </div>
-                    <div>
-                      <label>Larghezza</label>
-                      <input type="number" name="photo_w" id="photo_w">
-                    </div>
-                    <div>
-                      <label>Altezza</label>
-                      <input type="number" name="photo_h" id="photo_h">
-                    </div>
-                  </div>
-                </div>
-
-                <div id="multiBoxFields" style="display:none;">
-                  <h4>Box 1</h4>
-                  <div class="two-col">
-                    <input type="number" name="box1_x" id="box1_x" placeholder="X">
-                    <input type="number" name="box1_y" id="box1_y" placeholder="Y">
-                    <input type="number" name="box1_w" id="box1_w" placeholder="Larghezza">
-                    <input type="number" name="box1_h" id="box1_h" placeholder="Altezza">
-                  </div>
-
-                  <h4>Box 2</h4>
-                  <div class="two-col">
-                    <input type="number" name="box2_x" id="box2_x" placeholder="X">
-                    <input type="number" name="box2_y" id="box2_y" placeholder="Y">
-                    <input type="number" name="box2_w" id="box2_w" placeholder="Larghezza">
-                    <input type="number" name="box2_h" id="box2_h" placeholder="Altezza">
-                  </div>
-
-                  <h4>Box 3</h4>
-                  <div class="two-col">
-                    <input type="number" name="box3_x" id="box3_x" placeholder="X">
-                    <input type="number" name="box3_y" id="box3_y" placeholder="Y">
-                    <input type="number" name="box3_w" id="box3_w" placeholder="Larghezza">
-                    <input type="number" name="box3_h" id="box3_h" placeholder="Altezza">
-                  </div>
-                </div>
-
-                <button type="submit">Salva box foto</button>
-              </form>
+            <div style="margin-bottom:12px;">
+              <label>Event Code attivo</label>
+              <input type="text" id="qrEventCodeView" readonly>
             </div>
 
-            <div class="card admin-section" id="section-template-preview">
-              <h3>Anteprima box template</h3>
-
-              <div id="templatePreviewWrap" style="position:relative; width:100%; max-width:420px; margin:0 auto;">
-                <img id="templatePreviewImage" src="" alt="Anteprima template"
-                     style="width:100%; display:block; border-radius:16px; border:1px solid #ddd4ca;">
-                <div id="templatePreviewOverlay" style="position:absolute; inset:0;"></div>
-              </div>
-
-              <p class="helper" style="text-align:center; margin-top:10px;">
-                I riquadri mostrano l’area foto attuale del template.
-              </p>
+            <div style="margin-bottom:12px;">
+              <label>IP locale Raspberry</label>
+              <input type="text" id="qrIpView" readonly>
             </div>
 
-            <div class="card admin-section" id="section-real-preview">
-              <h3>Preview reale template</h3>
-
-              <label for="testPhotoInput">Foto test</label>
-              <input type="file" id="testPhotoInput" accept="image/*">
-
-              <div style="margin-top:14px; text-align:center;">
-                <img id="renderPreviewImg" alt="Preview reale template"
-                     style="max-width:100%; border-radius:12px; border:1px solid #ddd4ca; display:none;">
-              </div>
+            <div style="margin-bottom:12px;">
+              <label>URL QR</label>
+              <input type="text" id="qrUrlView" readonly>
             </div>
 
-            <div class="card admin-section" id="section-advanced-quota">
-              <h3>Controllo stampe avanzato</h3>
-
-              <form id="quotaConfigForm">
-                <label>Event Code (reset logico evento)</label>
-                <input type="text" name="event_code" id="event_code" placeholder="es. GIULIA-MARCO-2026">
-
-                <label>Limite stampe per dispositivo</label>
-                <input type="number" name="default_limit_per_identity" id="default_limit_per_identity" min="1" max="100">
-
-                <button type="submit">Salva configurazione</button>
-              </form>
-
-              <div style="margin-top:20px;">
-                <h4>Dispositivi / identità</h4>
-                <div id="quotaDeviceList"></div>
-              </div>
+            <div style="text-align:center; margin:16px 0;">
+              <img id="eventQrImg" alt="QR evento"
+                   style="max-width:240px; width:100%; border:1px solid #ddd4ca; border-radius:14px; background:#fff; padding:10px;">
             </div>
-            <div class="card admin-section" id="section-event-qr">
-              <h3>QR Code evento</h3>
 
-              <div class="helper" style="margin-bottom:12px;">
-                Il QR punta automaticamente all'evento attivo con il parametro <code>?event=...</code>
-              </div>
-
-              <div style="margin-bottom:12px;">
-                <label>Event Code attivo</label>
-                <input type="text" id="qrEventCodeView" readonly>
-              </div>
-
-              <div style="margin-bottom:12px;">
-                <label>IP locale Raspberry</label>
-                <input type="text" id="qrIpView" readonly>
-              </div>
-
-              <div style="margin-bottom:12px;">
-                <label>URL QR</label>
-                <input type="text" id="qrUrlView" readonly>
-              </div>
-
-              <div style="text-align:center; margin:16px 0;">
-                <img id="eventQrImg" alt="QR evento"
-                    style="max-width:240px; width:100%; border:1px solid #ddd4ca; border-radius:14px; background:#fff; padding:10px;">
-              </div>
-
-              <div>
-                <a class="btn" href="/admin/event-qr-download" target="_blank">Scarica QR PNG</a>
-                <button type="button" class="muted" onclick="loadEventQr()">Aggiorna QR</button>
-              </div>
+            <div>
+              <a class="btn" href="/admin/event-qr-download" target="_blank">Scarica QR PNG</a>
+              <button type="button" class="muted" onclick="loadEventQr()">Aggiorna QR</button>
             </div>
           </div>
         </div>
@@ -667,6 +689,11 @@
     const jobsBody = document.getElementById("jobsBody");
     const statusBox = document.getElementById("statusBox");
 
+    let currentTemplateDetail = null;
+    let visualBoxesState = [];
+    let templateScaleX = 1;
+    let templateScaleY = 1;
+
     function setStatus(msg) {
       statusBox.textContent = msg;
     }
@@ -685,49 +712,49 @@
       if (buttonEl) buttonEl.classList.add("active");
     }
 
-    function showSectionGroup(ids, buttonEl = null) {
-  localStorage.setItem("admin_section_group", JSON.stringify(ids));
-  localStorage.removeItem("admin_section");
-
-  const sections = document.querySelectorAll(".admin-section");
-  sections.forEach(sec => {
-    if (sec.id === "section-dashboard-stats") {
-      sec.style.display = "block";
-      return;
-    }
-
-    sec.style.display = ids.includes(sec.id) ? "block" : "none";
-  });
-
-  setActiveNav(buttonEl);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
     function showSection(id, buttonEl = null) {
-  localStorage.setItem("admin_section", id);
-  localStorage.removeItem("admin_section_group");
+      localStorage.setItem("admin_section", id);
+      localStorage.removeItem("admin_section_group");
 
-  const sections = document.querySelectorAll(".admin-section");
-  sections.forEach(sec => {
-    if (id === "all") {
-      sec.style.display = "block";
-      return;
+      const sections = document.querySelectorAll(".admin-section");
+      sections.forEach(sec => {
+        if (id === "all") {
+          sec.style.display = "block";
+          return;
+        }
+
+        if (sec.id === id || sec.id === "section-dashboard-stats") {
+          sec.style.display = "block";
+        } else {
+          sec.style.display = "none";
+        }
+      });
+
+      if (buttonEl) {
+        setActiveNav(buttonEl);
+      } else {
+        document.querySelectorAll(".nav-item").forEach(btn => btn.classList.remove("active"));
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    if (sec.id === id || sec.id === "section-dashboard-stats") {
-      sec.style.display = "block";
-    } else {
-      sec.style.display = "none";
+    function showSectionGroup(ids, buttonEl = null) {
+      localStorage.setItem("admin_section_group", JSON.stringify(ids));
+      localStorage.removeItem("admin_section");
+
+      const sections = document.querySelectorAll(".admin-section");
+      sections.forEach(sec => {
+        if (sec.id === "section-dashboard-stats") {
+          sec.style.display = "block";
+          return;
+        }
+        sec.style.display = ids.includes(sec.id) ? "block" : "none";
+      });
+
+      setActiveNav(buttonEl);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  });
-
-  if (buttonEl) {
-    setActiveNav(buttonEl);
-  } else {
-    document.querySelectorAll(".nav-item").forEach(btn => btn.classList.remove("active"));
-  }
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
 
     async function loadJobs() {
       try {
@@ -856,6 +883,201 @@
       }
     });
 
+    function getOverlayRefs() {
+      return {
+        img: document.getElementById("templatePreviewImage"),
+        overlay: document.getElementById("templatePreviewOverlay")
+      };
+    }
+
+    function syncInputsFromVisualState() {
+      if (!currentTemplateDetail) return;
+
+      if (currentTemplateDetail.mode === "image_template_multi" || currentTemplateDetail.print_format === "strip") {
+        const boxes = visualBoxesState;
+
+        document.getElementById("box1_x").value = boxes[0]?.x ?? 0;
+        document.getElementById("box1_y").value = boxes[0]?.y ?? 0;
+        document.getElementById("box1_w").value = boxes[0]?.w ?? 0;
+        document.getElementById("box1_h").value = boxes[0]?.h ?? 0;
+
+        document.getElementById("box2_x").value = boxes[1]?.x ?? 0;
+        document.getElementById("box2_y").value = boxes[1]?.y ?? 0;
+        document.getElementById("box2_w").value = boxes[1]?.w ?? 0;
+        document.getElementById("box2_h").value = boxes[1]?.h ?? 0;
+
+        document.getElementById("box3_x").value = boxes[2]?.x ?? 0;
+        document.getElementById("box3_y").value = boxes[2]?.y ?? 0;
+        document.getElementById("box3_w").value = boxes[2]?.w ?? 0;
+        document.getElementById("box3_h").value = boxes[2]?.h ?? 0;
+      } else {
+        const box = visualBoxesState[0] || { x: 0, y: 0, w: 0, h: 0 };
+        document.getElementById("photo_x").value = box.x;
+        document.getElementById("photo_y").value = box.y;
+        document.getElementById("photo_w").value = box.w;
+        document.getElementById("photo_h").value = box.h;
+      }
+    }
+
+    function syncVisualStateFromInputs() {
+      if (!currentTemplateDetail) return;
+
+      if (currentTemplateDetail.mode === "image_template_multi" || currentTemplateDetail.print_format === "strip") {
+        visualBoxesState = [
+          {
+            x: parseInt(document.getElementById("box1_x").value || "0", 10),
+            y: parseInt(document.getElementById("box1_y").value || "0", 10),
+            w: parseInt(document.getElementById("box1_w").value || "0", 10),
+            h: parseInt(document.getElementById("box1_h").value || "0", 10)
+          },
+          {
+            x: parseInt(document.getElementById("box2_x").value || "0", 10),
+            y: parseInt(document.getElementById("box2_y").value || "0", 10),
+            w: parseInt(document.getElementById("box2_w").value || "0", 10),
+            h: parseInt(document.getElementById("box2_h").value || "0", 10)
+          },
+          {
+            x: parseInt(document.getElementById("box3_x").value || "0", 10),
+            y: parseInt(document.getElementById("box3_y").value || "0", 10),
+            w: parseInt(document.getElementById("box3_w").value || "0", 10),
+            h: parseInt(document.getElementById("box3_h").value || "0", 10)
+          }
+        ];
+      } else {
+        visualBoxesState = [{
+          x: parseInt(document.getElementById("photo_x").value || "0", 10),
+          y: parseInt(document.getElementById("photo_y").value || "0", 10),
+          w: parseInt(document.getElementById("photo_w").value || "0", 10),
+          h: parseInt(document.getElementById("photo_h").value || "0", 10)
+        }];
+      }
+    }
+
+    function clampBox(box, maxW, maxH) {
+      box.w = Math.max(20, box.w);
+      box.h = Math.max(20, box.h);
+      box.x = Math.max(0, box.x);
+      box.y = Math.max(0, box.y);
+
+      if (box.x + box.w > maxW) box.x = Math.max(0, maxW - box.w);
+      if (box.y + box.h > maxH) box.y = Math.max(0, maxH - box.h);
+
+      if (box.x + box.w > maxW) box.w = Math.max(20, maxW - box.x);
+      if (box.y + box.h > maxH) box.h = Math.max(20, maxH - box.y);
+    }
+
+    function enableBoxInteractions(boxEl, index, handleEl) {
+      const { img } = getOverlayRefs();
+      const maxW = img.naturalWidth || 1200;
+      const maxH = img.naturalHeight || 1800;
+
+      let mode = null;
+      let startX = 0;
+      let startY = 0;
+      let startBox = null;
+
+      function onPointerMove(e) {
+        if (!mode) return;
+
+        const dx = (e.clientX - startX) / templateScaleX;
+        const dy = (e.clientY - startY) / templateScaleY;
+
+        const box = visualBoxesState[index];
+
+        if (mode === "move") {
+          box.x = Math.round(startBox.x + dx);
+          box.y = Math.round(startBox.y + dy);
+        } else if (mode === "resize") {
+          box.w = Math.round(startBox.w + dx);
+          box.h = Math.round(startBox.h + dy);
+        }
+
+        clampBox(box, maxW, maxH);
+        syncInputsFromVisualState();
+        renderVisualBoxes();
+        updateRealPreview();
+      }
+
+      function onPointerUp() {
+        mode = null;
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+      }
+
+      boxEl.addEventListener("pointerdown", (e) => {
+        if (e.target === handleEl) return;
+        e.preventDefault();
+
+        mode = "move";
+        startX = e.clientX;
+        startY = e.clientY;
+        startBox = { ...visualBoxesState[index] };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+      });
+
+      handleEl.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        mode = "resize";
+        startX = e.clientX;
+        startY = e.clientY;
+        startBox = { ...visualBoxesState[index] };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+      });
+    }
+
+    function renderVisualBoxes() {
+      const { img, overlay } = getOverlayRefs();
+      if (!img || !overlay || !currentTemplateDetail) return;
+
+      overlay.innerHTML = "";
+
+      const renderedWidth = img.clientWidth;
+      const renderedHeight = img.clientHeight;
+      const naturalWidth = img.naturalWidth || renderedWidth;
+      const naturalHeight = img.naturalHeight || renderedHeight;
+
+      templateScaleX = renderedWidth / naturalWidth;
+      templateScaleY = renderedHeight / naturalHeight;
+
+      visualBoxesState.forEach((box, index) => {
+        const boxEl = document.createElement("div");
+        boxEl.className = "preview-box";
+        boxEl.dataset.index = index;
+
+        boxEl.style.left = (box.x * templateScaleX) + "px";
+        boxEl.style.top = (box.y * templateScaleY) + "px";
+        boxEl.style.width = (box.w * templateScaleX) + "px";
+        boxEl.style.height = (box.h * templateScaleY) + "px";
+
+        const label = document.createElement("div");
+        label.className = "preview-box-label";
+        label.textContent = visualBoxesState.length > 1 ? "Box " + (index + 1) : "Photo Box";
+
+        const handle = document.createElement("div");
+        handle.className = "preview-resize-handle";
+
+        boxEl.appendChild(label);
+        boxEl.appendChild(handle);
+        overlay.appendChild(boxEl);
+
+        enableBoxInteractions(boxEl, index, handle);
+      });
+    }
+
+    function loadTemplateImage(templateId, callback) {
+      const { img } = getOverlayRefs();
+      img.onload = () => {
+        if (callback) callback();
+      };
+      img.src = "/admin/template-preview-file/" + encodeURIComponent(templateId) + "?t=" + Date.now();
+    }
+
     async function loadTemplateBoxesSelector() {
       try {
         const response = await fetch("/admin/templates-list");
@@ -887,49 +1109,6 @@
       }
     }
 
-    function drawBoxesOnOverlay(tpl) {
-      const overlay = document.getElementById("templatePreviewOverlay");
-      const img = document.getElementById("templatePreviewImage");
-
-      img.onload = () => {
-        overlay.innerHTML = "";
-
-        const renderedWidth = img.clientWidth;
-        const renderedHeight = img.clientHeight;
-        const naturalWidth = img.naturalWidth || renderedWidth;
-        const naturalHeight = img.naturalHeight || renderedHeight;
-
-        const scaleX = renderedWidth / naturalWidth;
-        const scaleY = renderedHeight / naturalHeight;
-
-        function addBox(box, labelText) {
-          const [x, y, w, h] = box;
-
-          const boxEl = document.createElement("div");
-          boxEl.className = "preview-box";
-          boxEl.style.left = (x * scaleX) + "px";
-          boxEl.style.top = (y * scaleY) + "px";
-          boxEl.style.width = (w * scaleX) + "px";
-          boxEl.style.height = (h * scaleY) + "px";
-
-          const label = document.createElement("div");
-          label.className = "preview-box-label";
-          label.textContent = labelText;
-
-          boxEl.appendChild(label);
-          overlay.appendChild(boxEl);
-        }
-
-        if (tpl.mode === "image_template_multi" || tpl.print_format === "strip") {
-          (tpl.photo_boxes || []).forEach((box, index) => addBox(box, "Box " + (index + 1)));
-        } else {
-          addBox(tpl.photo_box || [0, 0, 0, 0], "Photo Box");
-        }
-      };
-
-      img.src = "/admin/template-preview-file/" + encodeURIComponent(tpl.id) + "?t=" + Date.now();
-    }
-
     async function loadTemplateDetail(templateId) {
       try {
         const response = await fetch("/admin/template-detail/" + encodeURIComponent(templateId));
@@ -941,6 +1120,7 @@
         }
 
         const tpl = data.template;
+        currentTemplateDetail = tpl;
         document.getElementById("edit_photo_fit").value = tpl.photo_fit || "cover";
 
         const singleBoxFields = document.getElementById("singleBoxFields");
@@ -977,7 +1157,8 @@
           document.getElementById("photo_h").value = box[3] ?? 0;
         }
 
-        drawBoxesOnOverlay(tpl);
+        syncVisualStateFromInputs();
+        loadTemplateImage(tpl.id, renderVisualBoxes);
         updateRealPreview();
       } catch (e) {
         setStatus("Errore caricamento dettaglio template.");
@@ -1016,23 +1197,36 @@
       }
     }
 
+    function attachLivePreviewListeners() {
+      const ids = [
+        "edit_photo_fit",
+        "photo_x", "photo_y", "photo_w", "photo_h",
+        "box1_x", "box1_y", "box1_w", "box1_h",
+        "box2_x", "box2_y", "box2_w", "box2_h",
+        "box3_x", "box3_y", "box3_w", "box3_h"
+      ];
+
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.addEventListener("input", () => {
+          syncVisualStateFromInputs();
+          renderVisualBoxes();
+          updateRealPreview();
+        });
+
+        el.addEventListener("change", () => {
+          syncVisualStateFromInputs();
+          renderVisualBoxes();
+          updateRealPreview();
+        });
+      });
+    }
+
     document.getElementById("testPhotoInput").addEventListener("change", updateRealPreview);
     document.getElementById("edit_template_id").addEventListener("change", function () {
       loadTemplateDetail(this.value);
-    });
-
-    [
-      "edit_photo_fit",
-      "photo_x", "photo_y", "photo_w", "photo_h",
-      "box1_x", "box1_y", "box1_w", "box1_h",
-      "box2_x", "box2_y", "box2_w", "box2_h",
-      "box3_x", "box3_y", "box3_w", "box3_h"
-    ].forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-
-      el.addEventListener("input", updateRealPreview);
-      el.addEventListener("change", updateRealPreview);
     });
 
     document.getElementById("templateBoxesForm").addEventListener("submit", async (e) => {
@@ -1106,22 +1300,41 @@
       loadQuotaConfig();
     }
 
-   document.getElementById("quotaConfigForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+    document.getElementById("quotaConfigForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-  const fd = new FormData(e.target);
+      const fd = new FormData(e.target);
 
-  const res = await fetch("/admin/print-quotas/config", {
-    method: "POST",
-    body: fd
-  });
+      const res = await fetch("/admin/print-quotas/config", {
+        method: "POST",
+        body: fd
+      });
 
-  const data = await res.json();
-  setStatus(data.message || "Salvato");
+      const data = await res.json();
+      setStatus(data.message || "Salvato");
 
-  loadQuotaConfig();
-  loadEventQr();
-});
+      loadQuotaConfig();
+      loadEventQr();
+    });
+
+    async function loadEventQr() {
+      try {
+        const response = await fetch("/admin/event-qr-info");
+        const data = await response.json();
+
+        if (!data.success) {
+          setStatus(data.message || "Errore caricamento QR.");
+          return;
+        }
+
+        document.getElementById("qrEventCodeView").value = data.event_code;
+        document.getElementById("qrIpView").value = data.ip;
+        document.getElementById("qrUrlView").value = data.url;
+        document.getElementById("eventQrImg").src = "/admin/event-qr-image?t=" + Date.now();
+      } catch (e) {
+        setStatus("Errore di connessione nel caricamento QR.");
+      }
+    }
 
     window.addEventListener("DOMContentLoaded", () => {
       const savedGroup = localStorage.getItem("admin_section_group");
@@ -1142,26 +1355,8 @@
     setInterval(loadJobs, 5000);
     loadTemplateBoxesSelector();
     loadQuotaConfig();
-
-    async function loadEventQr() {
-  try {
-    const response = await fetch("/admin/event-qr-info");
-    const data = await response.json();
-
-    if (!data.success) {
-      setStatus(data.message || "Errore caricamento QR.");
-      return;
-    }
-
-    document.getElementById("qrEventCodeView").value = data.event_code;
-    document.getElementById("qrIpView").value = data.ip;
-    document.getElementById("qrUrlView").value = data.url;
-    document.getElementById("eventQrImg").src = "/admin/event-qr-image?t=" + Date.now();
-  } catch (e) {
-    setStatus("Errore di connessione nel caricamento QR.");
-  }
-  loadEventQr();
-}
+    loadEventQr();
+    attachLivePreviewListeners();
   </script>
 </body>
 </html>
