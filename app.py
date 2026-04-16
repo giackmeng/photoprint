@@ -37,7 +37,7 @@ def create_app():
     template_service = TemplateService(paths)
     job_manager = JobManager()
     image_service = ImageRenderService(paths, template_service)
-    device_limit_service = DeviceLimitService(config_service)
+    device_limit_service = DeviceLimitService(paths)
     device_identity_service = DeviceIdentityService()
     print_quota_service = PrintQuotaService(paths)
 
