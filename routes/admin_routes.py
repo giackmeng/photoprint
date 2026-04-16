@@ -1,6 +1,8 @@
 import os
 import csv
 import json
+import base64
+from io import BytesIO
 from datetime import datetime
 
 from flask import (
@@ -455,3 +457,93 @@ def register_admin_routes(app, paths, config_service, template_service, job_mana
             return jsonify({"success": False, "message": "File template non trovato"}), 404
 
         return send_file(path)    
+      @app.route("/admin/template-render-preview", methods=["POST"])
+    def admin_template_render_preview():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        if "photo" not in request.files:
+            return jsonify({"success": False, "message": "Nessuna foto"}), 400
+
+        file = request.files["photo"]
+        template_id = request.form.get("template_id", "").strip()
+
+        if not template_id:
+            return jsonify({"success": False, "message": "Template ID mancante"}), 400
+
+        tpl = template_service.get_template_by_id(template_id)
+        if not tpl:
+            return jsonify({"success": False, "message": "Template non trovato"}), 404
+
+        try:
+            img = Image.open(file.stream)
+            img = ImageOps.exif_transpose(img).convert("RGB")
+        except Exception:
+            return jsonify({"success": False, "message": "Immagine non valida"}), 400
+
+        config = config_service.load_config()
+
+        try:
+            # copia locale del template per override temporaneo
+            tpl_runtime = dict(tpl)
+
+            photo_fit = request.form.get("photo_fit", "").strip()
+            if photo_fit in {"cover", "contain"}:
+                tpl_runtime["photo_fit"] = photo_fit
+
+            if tpl_runtime.get("mode") == "image_template_multi" or tpl_runtime.get("print_format") == "strip":
+                tpl_runtime["photo_boxes"] = [
+                    [
+                        int(request.form.get("box1_x", "0")),
+                        int(request.form.get("box1_y", "0")),
+                        int(request.form.get("box1_w", "0")),
+                        int(request.form.get("box1_h", "0")),
+                    ],
+                    [
+                        int(request.form.get("box2_x", "0")),
+                        int(request.form.get("box2_y", "0")),
+                        int(request.form.get("box2_w", "0")),
+                        int(request.form.get("box2_h", "0")),
+                    ],
+                    [
+                        int(request.form.get("box3_x", "0")),
+                        int(request.form.get("box3_y", "0")),
+                        int(request.form.get("box3_w", "0")),
+                        int(request.form.get("box3_h", "0")),
+                    ],
+                ]
+            else:
+                tpl_runtime["photo_box"] = [
+                    int(request.form.get("photo_x", "0")),
+                    int(request.form.get("photo_y", "0")),
+                    int(request.form.get("photo_w", "0")),
+                    int(request.form.get("photo_h", "0")),
+                ]
+
+            mode = tpl_runtime.get("mode")
+
+            if mode == "image_template":
+                final = image_service.render_image_template(img, tpl_runtime, config)
+            elif mode == "image_template_multi":
+                final = image_service.render_image_template_multi(img, tpl_runtime, config)
+            elif mode == "generated":
+                final = image_service.render_generated_10x15(img, config, tpl_runtime)
+            elif mode == "auto_orientation":
+                final = image_service.render_auto_orientation_template(img, tpl_runtime, config)
+            else:
+                final = image_service.prepare_10x15(img)
+
+            preview = final.copy()
+            preview.thumbnail((450, 750))
+
+            buffer = BytesIO()
+            preview.save(buffer, format="JPEG", quality=88)
+            encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+            return jsonify({
+                "success": True,
+                "preview": f"data:image/jpeg;base64,{encoded}"
+            })
+
+        except Exception as e:
+            return jsonify({"success": False, "message": f"Errore render preview: {str(e)}"}), 500      
