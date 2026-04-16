@@ -1,6 +1,6 @@
 import os
 
-from flask import render_template, request, jsonify, url_for, make_response
+from flask import render_template, request, jsonify, url_for, make_response, session
 from werkzeug.utils import secure_filename
 
 
@@ -25,7 +25,18 @@ def register_public_routes(
         image_service.cleanup_old_files(paths.PREVIEW_FOLDER, max_age_seconds)
         job_manager.cleanup_old_jobs(max_age_seconds)
 
-        response = make_response(render_template("index.html", config=config))
+         # 👇 legge event da URL
+        event_from_url = request.args.get("event", "").strip()
+        if event_from_url:
+            session["event_code"] = event_from_url
+
+        event_code = session.get("event_code") or print_quota_service.get_event_code()    
+        response = make_response(render_template(
+            "index.html",
+            config=config,
+            event_code=event_code
+         ))
+        
         device_identity_service.get_or_create_browser_token(request, response)
         return response
 
@@ -158,7 +169,7 @@ def register_public_routes(
 
         client_ip, client_mac = device_limit_service.get_client_mac(request)
         browser_token = device_identity_service.get_or_create_browser_token(request)
-        event_code = print_quota_service.get_event_code()
+        event_code = session.get("event_code") or print_quota_service.get_event_code()
 
         identity_key = device_identity_service.build_identity_key(
             event_code=event_code,
@@ -289,6 +300,17 @@ def register_public_routes(
                 "message": f"Errore invio multiplo: {str(e)}"
             }), 500
 
+
+    @app.route("/event-info", methods=["GET"])
+    def event_info():
+        event_code = session.get("event_code") or print_quota_service.get_event_code()
+
+        return jsonify({
+            "success": True,
+            "event_code": event_code
+        })    
+
+    
     @app.errorhandler(413)
     def too_large(e):
         return jsonify({

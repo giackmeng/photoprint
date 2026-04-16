@@ -255,7 +255,12 @@
   </style>
 </head>
 <body>
+
   <div class="card">
+    <div style="text-align:center;margin-bottom:10px;">
+      <span style="font-size:12px;color:#999;">Evento</span><br>
+      <b id="eventCodeLabel">{{ event_code }}</b>
+    </div>
     <div class="brand">{{ config.brand_name }}</div>
     <h1>Print Station</h1>
     <p class="subtitle">{{ config.brand_tagline }}</p>
@@ -529,6 +534,17 @@
 
     refreshQueueInfo();
     setInterval(refreshQueueInfo, 4000);
+
+    async function loadEventInfo() {
+      const res = await fetch("/event-info");
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById("eventCodeLabel").innerText = data.event_code;
+      }
+    }
+
+    loadEventInfo();
   </script>
 </body>
 </html>
