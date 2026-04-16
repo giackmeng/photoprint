@@ -18,6 +18,7 @@ from services.template_service import TemplateService
 from services.job_manager import JobManager
 from services.image_render_service import ImageRenderService
 from services.print_worker import PrintWorker
+from services.device_limit_service import DeviceLimitService
 
 from routes.public_routes import register_public_routes
 from routes.admin_routes import register_admin_routes
@@ -34,6 +35,7 @@ def create_app():
     template_service = TemplateService(paths)
     job_manager = JobManager()
     image_service = ImageRenderService(paths, template_service)
+    device_limit_service = DeviceLimitService(config_service)
 
     # Flask app
     app = Flask(__name__)
@@ -56,6 +58,7 @@ def create_app():
         template_service=template_service,
         job_manager=job_manager,
         image_service=image_service,
+        device_limit_service=device_limit_service,
     )
 
     register_admin_routes(
@@ -66,6 +69,7 @@ def create_app():
         job_manager=job_manager,
         image_service=image_service,
         admin_required=admin_required,
+        device_limit_service=device_limit_service,
     )
 
     return app

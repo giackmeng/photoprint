@@ -1,11 +1,18 @@
 import os
-from datetime import datetime
 
 from flask import render_template, request, jsonify, url_for
 from werkzeug.utils import secure_filename
 
 
-def register_public_routes(app, paths, config_service, template_service, job_manager, image_service):
+def register_public_routes(
+    app,
+    paths,
+    config_service,
+    template_service,
+    job_manager,
+    image_service,
+    device_limit_service,
+):
     @app.route("/", methods=["GET"])
     def home():
         config = config_service.load_config()
@@ -48,6 +55,26 @@ def register_public_routes(app, paths, config_service, template_service, job_man
             "processing": stats["processing"],
         })
 
+    @app.route("/device-print-limit", methods=["GET"])
+    def device_print_limit():
+        client_ip, client_mac = device_limit_service.get_client_mac(request)
+
+        if not client_mac:
+            return jsonify({
+                "success": False,
+                "ip": client_ip,
+                "mac": None,
+                "message": "MAC address non disponibile"
+            }), 200
+
+        return jsonify({
+            "success": True,
+            "ip": client_ip,
+            "mac": client_mac,
+            "remaining": device_limit_service.get_remaining(client_mac),
+            "limit": device_limit_service.get_global_limit()
+        })
+
     @app.route("/preview-multiple", methods=["POST"])
     def preview_multiple():
         config = config_service.load_config()
@@ -83,7 +110,12 @@ def register_public_routes(app, paths, config_service, template_service, job_man
             if not temp_paths:
                 return jsonify({"success": False, "message": "Nessun file valido per l'anteprima"}), 400
 
-            preview_data = image_service.generate_preview_base64_from_paths(temp_paths, print_format, config)
+            preview_data = image_service.generate_preview_base64_from_paths(
+                temp_paths,
+                print_format,
+                config
+            )
+
             return jsonify({"success": True, "preview": preview_data})
 
         except Exception as e:
@@ -118,8 +150,21 @@ def register_public_routes(app, paths, config_service, template_service, job_man
         if print_format not in ["10x15", "strip"]:
             return jsonify({"success": False, "message": "Formato stampa non valido"}), 400
 
+        client_ip, client_mac = device_limit_service.get_client_mac(request)
+
+        if not client_mac:
+            return jsonify({
+                "success": False,
+                "message": "Impossibile identificare il dispositivo sulla rete Wi-Fi"
+            }), 400
+
         try:
+            # Caso STRIP: 1 job unico, conta il numero copie
             if print_format == "strip":
+                allowed, msg = device_limit_service.can_print(client_mac, copies)
+                if not allowed:
+                    return jsonify({"success": False, "message": msg}), 400
+
                 original_paths = []
 
                 for file in valid_files[:3]:
@@ -134,7 +179,10 @@ def register_public_routes(app, paths, config_service, template_service, job_man
                 if not original_paths:
                     return jsonify({"success": False, "message": "Nessun file valido da usare per la strip"}), 400
 
-                processed_path = os.path.join(paths.PROCESSED_FOLDER, image_service.make_unique_filename("jpg"))
+                processed_path = os.path.join(
+                    paths.PROCESSED_FOLDER,
+                    image_service.make_unique_filename("jpg")
+                )
 
                 job_id = job_manager.create_job(
                     original_path=original_paths[0],
@@ -145,13 +193,23 @@ def register_public_routes(app, paths, config_service, template_service, job_man
                 )
 
                 job_manager.print_queue.put(job_id)
+                device_limit_service.register_print(client_mac, copies)
 
                 return jsonify({
                     "success": True,
                     "message": f"Strip creata con {len(original_paths)} foto e inviata alla coda di stampa",
                     "job_ids": [job_id],
                     "redirect": url_for("success", job_id=job_id),
+                    "remaining_prints": device_limit_service.get_remaining(client_mac),
+                    "client_ip": client_ip,
+                    "client_mac": client_mac,
                 })
+
+            # Caso 10x15: conta foto * copie
+            requested_total = len(valid_files) * copies
+            allowed, msg = device_limit_service.can_print(client_mac, requested_total)
+            if not allowed:
+                return jsonify({"success": False, "message": msg}), 400
 
             created_jobs = []
 
@@ -179,15 +237,23 @@ def register_public_routes(app, paths, config_service, template_service, job_man
             if not created_jobs:
                 return jsonify({"success": False, "message": "Nessun file valido da stampare"}), 400
 
+            device_limit_service.register_print(client_mac, requested_total)
+
             return jsonify({
                 "success": True,
                 "message": f"{len(created_jobs)} foto inviate correttamente alla coda di stampa",
                 "job_ids": created_jobs,
                 "redirect": url_for("success", job_id=created_jobs[0]),
+                "remaining_prints": device_limit_service.get_remaining(client_mac),
+                "client_ip": client_ip,
+                "client_mac": client_mac,
             })
 
         except Exception as e:
-            return jsonify({"success": False, "message": f"Errore invio multiplo: {str(e)}"}), 500
+            return jsonify({
+                "success": False,
+                "message": f"Errore invio multiplo: {str(e)}"
+            }), 500
 
     @app.errorhandler(413)
     def too_large(e):

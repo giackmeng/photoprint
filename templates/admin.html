@@ -329,6 +329,17 @@
             <button type="submit">Carica logo</button>
           </form>
         </div>
+        <div class="card">
+          <h3>Limite stampe per dispositivo</h3>
+
+          <form id="deviceLimitForm">
+            <label>Numero massimo stampe per MAC address</label>
+            <input type="number" name="max_prints_per_mac" id="max_prints_per_mac" min="1" max="500" value="3" required>
+            <button type="submit">Salva limite</button>
+          </form>
+
+          <div id="deviceLimitList" style="margin-top:16px;"></div>
+        </div>
 
         <div class="card">
           <h3>Modifica box foto template</h3>
@@ -800,6 +811,72 @@
     loadJobs();
     setInterval(loadJobs, 5000);
     loadTemplateBoxesSelector();
+
+     async function loadDeviceLimits() {
+    try {
+      const response = await fetch("/admin/device-limits");
+      const data = await response.json();
+
+      if (!data.success) return;
+
+      document.getElementById("max_prints_per_mac").value = data.max_prints_per_mac;
+
+      const wrap = document.getElementById("deviceLimitList");
+      wrap.innerHTML = "";
+
+      if (!data.devices.length) {
+        wrap.innerHTML = "<p style='color:#7a7268;font-size:13px;'>Nessun dispositivo registrato.</p>";
+        return;
+      }
+
+      data.devices.forEach(d => {
+        const row = document.createElement("div");
+        row.style.padding = "10px";
+        row.style.border = "1px solid #eee7df";
+        row.style.borderRadius = "10px";
+        row.style.marginBottom = "8px";
+        row.innerHTML = `
+          <div><b>${d.mac}</b></div>
+          <div style="font-size:13px;color:#6f675f;">Usate: ${d.prints_used} · Rimanenti: ${d.remaining}</div>
+          <button type="button" class="muted" onclick="resetDeviceLimit('${d.mac}')">Reset</button>
+        `;
+        wrap.appendChild(row);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function resetDeviceLimit(mac) {
+    const fd = new FormData();
+    fd.append("mac", mac);
+
+    const response = await fetch("/admin/device-limits/reset", {
+      method: "POST",
+      body: fd
+    });
+
+    const data = await response.json();
+    setStatus(data.message || "Operazione completata.");
+    loadDeviceLimits();
+  }
+
+  document.getElementById("deviceLimitForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+
+    const response = await fetch("/admin/device-limits/config", {
+      method: "POST",
+      body: fd
+    });
+
+    const data = await response.json();
+    setStatus(data.message || "Operazione completata.");
+    loadDeviceLimits();
+  });
+
+  loadDeviceLimits();
+
   </script>
 </body>
 </html>
