@@ -2,6 +2,8 @@ import os
 import csv
 import json
 import base64
+import socket
+import qrcode
 from io import BytesIO
 from datetime import datetime
 
@@ -648,5 +650,80 @@ def register_admin_routes(app,
 
         print_quota_service.reset_identity(identity_key)
         return jsonify({"success": True, "message": "Quota dispositivo azzerata"})
+    
+    def get_best_local_ip():
+        try:
+            import subprocess
+            output = subprocess.check_output(
+                "ip -4 addr show wlan0 | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'",
+                shell=True
+            ).decode().strip()
+
+            if output:
+                return output
+        except Exception:
+            pass
+
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip
+        except Exception:
+            return "127.0.0.1"
+
+    @app.route("/admin/event-qr-info", methods=["GET"])
+    def admin_event_qr_info():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        event_code = print_quota_service.get_event_code()
+        ip = get_best_local_ip()
+        url = f"http://{ip}:5000/?event={event_code}"
+
+        return jsonify({
+            "success": True,
+            "event_code": event_code,
+            "ip": ip,
+            "url": url
+        })
+
+    @app.route("/admin/event-qr-image", methods=["GET"])
+    def admin_event_qr_image():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        event_code = print_quota_service.get_event_code()
+        ip = get_best_local_ip()
+        url = f"http://{ip}:5000/?event={event_code}"
+
+        try:
+            img = qrcode.make(url)
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+            return send_file(buffer, mimetype="image/png")
+        except Exception as e:
+            return jsonify({"success": False, "message": f"Errore generazione QR: {str(e)}"}), 500
+
+    @app.route("/admin/event-qr-download", methods=["GET"])
+    def admin_event_qr_download():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        event_code = print_quota_service.get_event_code()
+        ip = get_best_local_ip()
+        url = f"http://{ip}:5000/?event={event_code}"
+
+        try:
+            img = qrcode.make(url)
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+            filename = f"event_qr_{event_code}.png"
+            return send_file(buffer, mimetype="image/png", as_attachment=True, download_name=filename)
+        except Exception as e:
+            return jsonify({"success": False, "message": f"Errore generazione QR: {str(e)}"}), 500
 
         

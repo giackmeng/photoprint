@@ -7,11 +7,100 @@
   <style>
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
       font-family: Arial, Helvetica, sans-serif;
       background: #f6f3ef;
       color: #222;
+    }
+
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #181818;
+      color: white;
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .sidebar-brand {
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .sidebar-logo {
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+    }
+
+    .sidebar-sub {
+      margin-top: 6px;
+      color: rgba(255,255,255,0.65);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      color: rgba(255,255,255,0.82);
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s ease;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.08);
+      color: white;
+    }
+
+    .nav-item.active {
+      background: #f0e7dd;
+      color: #1f1f1f;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sidebar-link {
+      color: rgba(255,255,255,0.82);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .sidebar-link:hover {
+      color: white;
+    }
+
+    .admin-main {
+      flex: 1;
       padding: 24px;
     }
 
@@ -63,6 +152,10 @@
       padding: 18px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.05);
       margin-bottom: 20px;
+    }
+
+    .admin-section {
+      display: block;
     }
 
     h3 {
@@ -191,7 +284,36 @@
       line-height: 1.5;
     }
 
+    .quota-row {
+      border: 1px solid #eee7df;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 8px;
+      background: #fff;
+    }
+
+    .quota-key {
+      font-size: 12px;
+      color: #8a8177;
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+
     @media (max-width: 980px) {
+      .admin-layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+
+      .admin-main {
+        padding: 18px;
+      }
+
       .grid,
       .stats,
       .two-col {
@@ -201,287 +323,337 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>{{ config.brand_name }} Admin Panel</h1>
-    <div class="sub">{{ config.event_name }} · {{ config.event_date }}</div>
-
-    <div class="stats">
-      <div class="stat"><b id="s_total">{{ stats.total }}</b>Job totali</div>
-      <div class="stat"><b id="s_done">{{ stats.done }}</b>Completati</div>
-      <div class="stat"><b id="s_copies">{{ stats.total_copies }}</b>Copie stampate</div>
-      <div class="stat"><b id="s_queue">{{ stats.queued }}</b>In coda</div>
-      <div class="stat"><b id="s_processing">{{ stats.processing }}</b>In lavorazione</div>
-      <div class="stat"><b id="s_errors">{{ stats.errors }}</b>Errori</div>
-    </div>
-
-    <div class="status" id="statusBox">Pannello pronto.</div>
-
-    <div class="grid">
-      <div>
-        <div class="card">
-          <h3>Configurazione evento</h3>
-          <form id="configForm">
-            <label>Nome stampante</label>
-            <input name="printer_name" value="{{ config.printer_name }}" required>
-
-            <label>Brand</label>
-            <input name="brand_name" value="{{ config.brand_name }}" required>
-
-            <label>Tagline</label>
-            <input name="brand_tagline" value="{{ config.brand_tagline }}" required>
-
-            <label>Nome evento</label>
-            <input name="event_name" value="{{ config.event_name }}" required>
-
-            <label>Data evento</label>
-            <input name="event_date" value="{{ config.event_date }}" required>
-
-            <div class="two-col">
-              <div>
-                <label>Max copie</label>
-                <input name="max_copies" type="number" min="1" max="20" value="{{ config.max_copies }}" required>
-              </div>
-              <div>
-                <label>Ore conservazione file</label>
-                <input name="max_file_age_hours" type="number" min="1" max="168" value="{{ config.max_file_age_hours }}" required>
-              </div>
-            </div>
-
-            <button type="submit">Salva configurazione</button>
-          </form>
-        </div>
-
-        <div class="card">
-          <h3>Template attivi</h3>
-          <form id="templatesForm">
-            <label for="active_template_10x15">Template 10x15</label>
-            <select name="active_template_10x15" id="active_template_10x15" required>
-              {% for tpl in templates_10x15 %}
-                <option value="{{ tpl.id }}"
-                  {% if templates_cfg.active_template_10x15 == tpl.id %}selected{% endif %}>
-                  {{ tpl.label }} ({{ tpl.id }})
-                </option>
-              {% endfor %}
-            </select>
-
-            <label for="active_template_strip">Template strip</label>
-            <select name="active_template_strip" id="active_template_strip" required>
-              {% for tpl in templates_strip %}
-                <option value="{{ tpl.id }}"
-                  {% if templates_cfg.active_template_strip == tpl.id %}selected{% endif %}>
-                  {{ tpl.label }} ({{ tpl.id }})
-                </option>
-              {% endfor %}
-            </select>
-
-            <button type="submit">Salva template attivi</button>
-          </form>
-        </div>
-
-        <div class="card">
-          <h3>Carica template Canva / Photoshop</h3>
-
-          <form id="templateUploadForm">
-            <label>ID template</label>
-            <input type="text" name="template_id" placeholder="es. wedding_canva_01" required>
-
-            <label>Nome visibile</label>
-            <input type="text" name="label" placeholder="es. Wedding Canva 01" required>
-
-            <label>Formato</label>
-            <select name="print_format" required>
-              <option value="10x15">10x15</option>
-              <option value="strip">Strip</option>
-            </select>
-
-            <label>Tipo template</label>
-            <select name="mode" required>
-              <option value="image_template">Template singolo</option>
-              <option value="image_template_multi">Template multi-box</option>
-            </select>
-
-            <label>File template</label>
-            <input type="file" name="template_file" accept=".png,.jpg,.jpeg,.webp" required>
-
-            <button type="submit">Carica template</button>
-          </form>
-
-          <p class="helper">
-            Dimensioni richieste: 10x15 = 1200x1800 px · strip = 600x1800 px
-          </p>
-        </div>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">{{ config.brand_name }}</div>
+        <div class="sidebar-sub">{{ config.event_name }}<br>{{ config.event_date }}</div>
       </div>
 
-      <div>
-        <div class="card">
-          <h3>Azioni rapide</h3>
-          <button id="refreshBtn">Aggiorna storico</button>
-          <button id="reprintLastBtn">Ristampa ultimo job</button>
-          <button id="cleanupBtn" class="muted">Pulizia</button>
-          <a class="btn muted" href="/admin/export">Esporta CSV</a>
-          <a class="btn muted" href="/admin/logout">Logout</a>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" onclick="showSection('all', this)">Dashboard</button>
+        <button class="nav-item" onclick="showSection('section-config', this)">Configurazione</button>
+        <button class="nav-item" onclick="showSection('section-active-templates', this)">Template attivi</button>
+        <button class="nav-item" onclick="showSection('section-upload-template', this)">Upload template</button>
+        <button class="nav-item" onclick="showSection('section-quick-actions', this)">Azioni rapide</button>
+       <button class="nav-item" onclick="showSectionGroup(['section-photo-boxes','section-template-preview','section-real-preview'], this)">Editor template</button>
+        <button class="nav-item" onclick="showSection('section-advanced-quota', this)">Quote / Limiti</button>
+        <button class="nav-item" onclick="showSection('section-jobs', this)">Job</button>
+        <button class="nav-item" onclick="showSection('section-event-qr', this)">QR evento</button>
+      </nav>
 
-          <hr style="margin:18px 0;border:none;border-top:1px solid #eee7df;">
+      <div class="sidebar-footer">
+        <a class="sidebar-link" href="/admin/export">Esporta CSV</a>
+        <a class="sidebar-link" href="/admin/logout">Logout</a>
+      </div>
+    </aside>
 
-          <h3>Upload logo</h3>
-          <form id="logoForm">
-            <input type="file" name="logo" accept="image/*" required>
-            <button type="submit">Carica logo</button>
-          </form>
+    <main class="admin-main">
+      <div class="wrap">
+        <h1>{{ config.brand_name }} Admin Panel</h1>
+        <div class="sub">{{ config.event_name }} · {{ config.event_date }}</div>
+
+        <div class="stats admin-section" id="section-dashboard-stats">
+          <div class="stat"><b id="s_total">{{ stats.total }}</b>Job totali</div>
+          <div class="stat"><b id="s_done">{{ stats.done }}</b>Completati</div>
+          <div class="stat"><b id="s_copies">{{ stats.total_copies }}</b>Copie stampate</div>
+          <div class="stat"><b id="s_queue">{{ stats.queued }}</b>In coda</div>
+          <div class="stat"><b id="s_processing">{{ stats.processing }}</b>In lavorazione</div>
+          <div class="stat"><b id="s_errors">{{ stats.errors }}</b>Errori</div>
         </div>
-        <div class="card">
-          <h3>Limite stampe per dispositivo</h3>
 
-          <form id="deviceLimitForm">
-            <label>Numero massimo stampe per MAC address</label>
-            <input type="number" name="max_prints_per_mac" id="max_prints_per_mac" min="1" max="500" value="3" required>
-            <button type="submit">Salva limite</button>
-          </form>
+        <div class="status" id="statusBox">Pannello pronto.</div>
 
-          <div id="deviceLimitList" style="margin-top:16px;"></div>
-        </div>
-        <div class="card">
-          <h3>Controllo stampe avanzato</h3>
+        <div class="grid">
+          <div>
+            <div class="card admin-section" id="section-config">
+              <h3>Configurazione evento</h3>
+              <form id="configForm">
+                <label>Nome stampante</label>
+                <input name="printer_name" value="{{ config.printer_name }}" required>
 
-          <form id="quotaConfigForm">
-            <label>Event Code (reset automatico contatori)</label>
-            <input type="text" name="event_code" id="event_code" placeholder="es. GIULIA-MARCO-2026">
+                <label>Brand</label>
+                <input name="brand_name" value="{{ config.brand_name }}" required>
 
-            <label>Limite stampe per dispositivo</label>
-            <input type="number" name="default_limit_per_identity" id="default_limit_per_identity" min="1" max="100">
+                <label>Tagline</label>
+                <input name="brand_tagline" value="{{ config.brand_tagline }}" required>
 
-            <button type="submit">Salva configurazione</button>
-          </form>
+                <label>Nome evento</label>
+                <input name="event_name" value="{{ config.event_name }}" required>
 
-          <div style="margin-top:20px;">
-            <h4>Dispositivi</h4>
-            <div id="quotaDeviceList"></div>
+                <label>Data evento</label>
+                <input name="event_date" value="{{ config.event_date }}" required>
+
+                <div class="two-col">
+                  <div>
+                    <label>Max copie</label>
+                    <input name="max_copies" type="number" min="1" max="20" value="{{ config.max_copies }}" required>
+                  </div>
+                  <div>
+                    <label>Ore conservazione file</label>
+                    <input name="max_file_age_hours" type="number" min="1" max="168" value="{{ config.max_file_age_hours }}" required>
+                  </div>
+                </div>
+
+                <button type="submit">Salva configurazione</button>
+              </form>
+            </div>
+
+            <div class="card admin-section" id="section-active-templates">
+              <h3>Template attivi</h3>
+              <form id="templatesForm">
+                <label for="active_template_10x15">Template 10x15</label>
+                <select name="active_template_10x15" id="active_template_10x15" required>
+                  {% for tpl in templates_10x15 %}
+                    <option value="{{ tpl.id }}"
+                      {% if templates_cfg.active_template_10x15 == tpl.id %}selected{% endif %}>
+                      {{ tpl.label }} ({{ tpl.id }})
+                    </option>
+                  {% endfor %}
+                </select>
+
+                <label for="active_template_strip">Template strip</label>
+                <select name="active_template_strip" id="active_template_strip" required>
+                  {% for tpl in templates_strip %}
+                    <option value="{{ tpl.id }}"
+                      {% if templates_cfg.active_template_strip == tpl.id %}selected{% endif %}>
+                      {{ tpl.label }} ({{ tpl.id }})
+                    </option>
+                  {% endfor %}
+                </select>
+
+                <button type="submit">Salva template attivi</button>
+              </form>
+            </div>
+
+            <div class="card admin-section" id="section-upload-template">
+              <h3>Carica template Canva / Photoshop</h3>
+
+              <form id="templateUploadForm">
+                <label>ID template</label>
+                <input type="text" name="template_id" placeholder="es. wedding_canva_01" required>
+
+                <label>Nome visibile</label>
+                <input type="text" name="label" placeholder="es. Wedding Canva 01" required>
+
+                <label>Formato</label>
+                <select name="print_format" required>
+                  <option value="10x15">10x15</option>
+                  <option value="strip">Strip</option>
+                </select>
+
+                <label>Tipo template</label>
+                <select name="mode" required>
+                  <option value="image_template">Template singolo</option>
+                  <option value="image_template_multi">Template multi-box</option>
+                </select>
+
+                <label>File template</label>
+                <input type="file" name="template_file" accept=".png,.jpg,.jpeg,.webp" required>
+
+                <button type="submit">Carica template</button>
+              </form>
+
+              <p class="helper">
+                Dimensioni richieste: 10x15 = 1200x1800 px · strip = 600x1800 px
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div class="card">
-          <h3>Modifica box foto template</h3>
+          <div>
+            <div class="card admin-section" id="section-quick-actions">
+              <h3>Azioni rapide</h3>
+              <button id="refreshBtn">Aggiorna storico</button>
+              <button id="reprintLastBtn">Ristampa ultimo job</button>
+              <button id="cleanupBtn" class="muted">Pulizia</button>
 
-          <form id="templateBoxesForm">
-            <label for="edit_template_id">Template</label>
-            <select name="template_id" id="edit_template_id" required></select>
+              <hr style="margin:18px 0;border:none;border-top:1px solid #eee7df;">
 
-            <label for="edit_photo_fit">Photo fit</label>
-            <select name="photo_fit" id="edit_photo_fit">
-              <option value="cover">cover</option>
-              <option value="contain">contain</option>
-            </select>
+              <h3>Upload logo</h3>
+              <form id="logoForm">
+                <input type="file" name="logo" accept="image/*" required>
+                <button type="submit">Carica logo</button>
+              </form>
+            </div>
 
-            <div id="singleBoxFields">
-              <div class="two-col">
-                <div>
-                  <label>X</label>
-                  <input type="number" name="photo_x" id="photo_x">
+            <div class="card admin-section" id="section-photo-boxes">
+              <h3>Modifica box foto template</h3>
+
+              <form id="templateBoxesForm">
+                <label for="edit_template_id">Template</label>
+                <select name="template_id" id="edit_template_id" required></select>
+
+                <label for="edit_photo_fit">Photo fit</label>
+                <select name="photo_fit" id="edit_photo_fit">
+                  <option value="cover">cover</option>
+                  <option value="contain">contain</option>
+                </select>
+
+                <div id="singleBoxFields">
+                  <div class="two-col">
+                    <div>
+                      <label>X</label>
+                      <input type="number" name="photo_x" id="photo_x">
+                    </div>
+                    <div>
+                      <label>Y</label>
+                      <input type="number" name="photo_y" id="photo_y">
+                    </div>
+                    <div>
+                      <label>Larghezza</label>
+                      <input type="number" name="photo_w" id="photo_w">
+                    </div>
+                    <div>
+                      <label>Altezza</label>
+                      <input type="number" name="photo_h" id="photo_h">
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label>Y</label>
-                  <input type="number" name="photo_y" id="photo_y">
+
+                <div id="multiBoxFields" style="display:none;">
+                  <h4>Box 1</h4>
+                  <div class="two-col">
+                    <input type="number" name="box1_x" id="box1_x" placeholder="X">
+                    <input type="number" name="box1_y" id="box1_y" placeholder="Y">
+                    <input type="number" name="box1_w" id="box1_w" placeholder="Larghezza">
+                    <input type="number" name="box1_h" id="box1_h" placeholder="Altezza">
+                  </div>
+
+                  <h4>Box 2</h4>
+                  <div class="two-col">
+                    <input type="number" name="box2_x" id="box2_x" placeholder="X">
+                    <input type="number" name="box2_y" id="box2_y" placeholder="Y">
+                    <input type="number" name="box2_w" id="box2_w" placeholder="Larghezza">
+                    <input type="number" name="box2_h" id="box2_h" placeholder="Altezza">
+                  </div>
+
+                  <h4>Box 3</h4>
+                  <div class="two-col">
+                    <input type="number" name="box3_x" id="box3_x" placeholder="X">
+                    <input type="number" name="box3_y" id="box3_y" placeholder="Y">
+                    <input type="number" name="box3_w" id="box3_w" placeholder="Larghezza">
+                    <input type="number" name="box3_h" id="box3_h" placeholder="Altezza">
+                  </div>
                 </div>
-                <div>
-                  <label>Larghezza</label>
-                  <input type="number" name="photo_w" id="photo_w">
-                </div>
-                <div>
-                  <label>Altezza</label>
-                  <input type="number" name="photo_h" id="photo_h">
-                </div>
+
+                <button type="submit">Salva box foto</button>
+              </form>
+            </div>
+
+            <div class="card admin-section" id="section-template-preview">
+              <h3>Anteprima box template</h3>
+
+              <div id="templatePreviewWrap" style="position:relative; width:100%; max-width:420px; margin:0 auto;">
+                <img id="templatePreviewImage" src="" alt="Anteprima template"
+                     style="width:100%; display:block; border-radius:16px; border:1px solid #ddd4ca;">
+                <div id="templatePreviewOverlay" style="position:absolute; inset:0;"></div>
+              </div>
+
+              <p class="helper" style="text-align:center; margin-top:10px;">
+                I riquadri mostrano l’area foto attuale del template.
+              </p>
+            </div>
+
+            <div class="card admin-section" id="section-real-preview">
+              <h3>Preview reale template</h3>
+
+              <label for="testPhotoInput">Foto test</label>
+              <input type="file" id="testPhotoInput" accept="image/*">
+
+              <div style="margin-top:14px; text-align:center;">
+                <img id="renderPreviewImg" alt="Preview reale template"
+                     style="max-width:100%; border-radius:12px; border:1px solid #ddd4ca; display:none;">
               </div>
             </div>
 
-            <div id="multiBoxFields" style="display:none;">
-              <h4>Box 1</h4>
-              <div class="two-col">
-                <input type="number" name="box1_x" id="box1_x" placeholder="X">
-                <input type="number" name="box1_y" id="box1_y" placeholder="Y">
-                <input type="number" name="box1_w" id="box1_w" placeholder="Larghezza">
-                <input type="number" name="box1_h" id="box1_h" placeholder="Altezza">
-              </div>
+            <div class="card admin-section" id="section-advanced-quota">
+              <h3>Controllo stampe avanzato</h3>
 
-              <h4>Box 2</h4>
-              <div class="two-col">
-                <input type="number" name="box2_x" id="box2_x" placeholder="X">
-                <input type="number" name="box2_y" id="box2_y" placeholder="Y">
-                <input type="number" name="box2_w" id="box2_w" placeholder="Larghezza">
-                <input type="number" name="box2_h" id="box2_h" placeholder="Altezza">
-              </div>
+              <form id="quotaConfigForm">
+                <label>Event Code (reset logico evento)</label>
+                <input type="text" name="event_code" id="event_code" placeholder="es. GIULIA-MARCO-2026">
 
-              <h4>Box 3</h4>
-              <div class="two-col">
-                <input type="number" name="box3_x" id="box3_x" placeholder="X">
-                <input type="number" name="box3_y" id="box3_y" placeholder="Y">
-                <input type="number" name="box3_w" id="box3_w" placeholder="Larghezza">
-                <input type="number" name="box3_h" id="box3_h" placeholder="Altezza">
+                <label>Limite stampe per dispositivo</label>
+                <input type="number" name="default_limit_per_identity" id="default_limit_per_identity" min="1" max="100">
+
+                <button type="submit">Salva configurazione</button>
+              </form>
+
+              <div style="margin-top:20px;">
+                <h4>Dispositivi / identità</h4>
+                <div id="quotaDeviceList"></div>
               </div>
             </div>
+            <div class="card admin-section" id="section-event-qr">
+              <h3>QR Code evento</h3>
 
-            <button type="submit">Salva box foto</button>
-          </form>
+              <div class="helper" style="margin-bottom:12px;">
+                Il QR punta automaticamente all'evento attivo con il parametro <code>?event=...</code>
+              </div>
+
+              <div style="margin-bottom:12px;">
+                <label>Event Code attivo</label>
+                <input type="text" id="qrEventCodeView" readonly>
+              </div>
+
+              <div style="margin-bottom:12px;">
+                <label>IP locale Raspberry</label>
+                <input type="text" id="qrIpView" readonly>
+              </div>
+
+              <div style="margin-bottom:12px;">
+                <label>URL QR</label>
+                <input type="text" id="qrUrlView" readonly>
+              </div>
+
+              <div style="text-align:center; margin:16px 0;">
+                <img id="eventQrImg" alt="QR evento"
+                    style="max-width:240px; width:100%; border:1px solid #ddd4ca; border-radius:14px; background:#fff; padding:10px;">
+              </div>
+
+              <div>
+                <a class="btn" href="/admin/event-qr-download" target="_blank">Scarica QR PNG</a>
+                <button type="button" class="muted" onclick="loadEventQr()">Aggiorna QR</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="card">
-          <h3>Anteprima box template</h3>
-
-          <div id="templatePreviewWrap" style="position:relative; width:100%; max-width:420px; margin:0 auto;">
-            <img id="templatePreviewImage" src="" alt="Anteprima template"
-                 style="width:100%; display:block; border-radius:16px; border:1px solid #ddd4ca;">
-            <div id="templatePreviewOverlay" style="position:absolute; inset:0;"></div>
-          </div>
-
-          <p class="helper" style="text-align:center; margin-top:10px;">
-            I riquadri mostrano l’area foto attuale del template.
-          </p>
-        </div>
-
-        <div class="card">
-          <h3>Preview reale template</h3>
-
-          <label for="testPhotoInput">Foto test</label>
-          <input type="file" id="testPhotoInput" accept="image/*">
-
-          <div style="margin-top:14px; text-align:center;">
-            <img id="renderPreviewImg" alt="Preview reale template"
-                 style="max-width:100%; border-radius:12px; border:1px solid #ddd4ca; display:none;">
-          </div>
+        <div class="admin-section" id="section-jobs">
+          <table>
+            <thead>
+              <tr>
+                <th>Ora</th>
+                <th>ID</th>
+                <th>Stato</th>
+                <th>Formato</th>
+                <th>Copie</th>
+                <th>Messaggio</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="jobsBody">
+              {% for job in jobs %}
+              <tr>
+                <td>{{ job.created_at }}</td>
+                <td>{{ job.id }}</td>
+                <td><span class="pill {{ job.status }}">{{ job.status }}</span></td>
+                <td>{{ job.print_format }}</td>
+                <td>{{ job.copies }}</td>
+                <td>{{ job.message }}</td>
+                <td>
+                  <button onclick="reprintJob('{{ job.id }}')">Ristampa</button>
+                  {% if job.status == 'queued' %}
+                    <button class="muted" onclick="cancelJob('{{ job.id }}')">Annulla</button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Ora</th>
-          <th>ID</th>
-          <th>Stato</th>
-          <th>Formato</th>
-          <th>Copie</th>
-          <th>Messaggio</th>
-          <th>Azioni</th>
-        </tr>
-      </thead>
-      <tbody id="jobsBody">
-        {% for job in jobs %}
-        <tr>
-          <td>{{ job.created_at }}</td>
-          <td>{{ job.id }}</td>
-          <td><span class="pill {{ job.status }}">{{ job.status }}</span></td>
-          <td>{{ job.print_format }}</td>
-          <td>{{ job.copies }}</td>
-          <td>{{ job.message }}</td>
-          <td>
-            <button onclick="reprintJob('{{ job.id }}')">Ristampa</button>
-            {% if job.status == 'queued' %}
-              <button class="muted" onclick="cancelJob('{{ job.id }}')">Annulla</button>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    </main>
   </div>
 
   <script>
@@ -500,6 +672,55 @@
       document.getElementById("s_processing").textContent = stats.processing;
       document.getElementById("s_errors").textContent = stats.errors;
     }
+
+    function setActiveNav(buttonEl) {
+      document.querySelectorAll(".nav-item").forEach(btn => btn.classList.remove("active"));
+      if (buttonEl) buttonEl.classList.add("active");
+    }
+
+    function showSectionGroup(ids, buttonEl = null) {
+  localStorage.setItem("admin_section_group", JSON.stringify(ids));
+  localStorage.removeItem("admin_section");
+
+  const sections = document.querySelectorAll(".admin-section");
+  sections.forEach(sec => {
+    if (sec.id === "section-dashboard-stats") {
+      sec.style.display = "block";
+      return;
+    }
+
+    sec.style.display = ids.includes(sec.id) ? "block" : "none";
+  });
+
+  setActiveNav(buttonEl);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+    function showSection(id, buttonEl = null) {
+  localStorage.setItem("admin_section", id);
+  localStorage.removeItem("admin_section_group");
+
+  const sections = document.querySelectorAll(".admin-section");
+  sections.forEach(sec => {
+    if (id === "all") {
+      sec.style.display = "block";
+      return;
+    }
+
+    if (sec.id === id || sec.id === "section-dashboard-stats") {
+      sec.style.display = "block";
+    } else {
+      sec.style.display = "none";
+    }
+  });
+
+  if (buttonEl) {
+    setActiveNav(buttonEl);
+  } else {
+    document.querySelectorAll(".nav-item").forEach(btn => btn.classList.remove("active"));
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
     async function loadJobs() {
       try {
@@ -826,135 +1047,59 @@
       }
     });
 
-    loadJobs();
-    setInterval(loadJobs, 5000);
-    loadTemplateBoxesSelector();
+    async function loadQuotaConfig() {
+      try {
+        const res = await fetch("/admin/print-quotas");
+        const data = await res.json();
 
-     async function loadDeviceLimits() {
-    try {
-      const response = await fetch("/admin/device-limits");
-      const data = await response.json();
+        if (!data.success) return;
 
-      if (!data.success) return;
+        document.getElementById("event_code").value = data.event_code;
+        document.getElementById("default_limit_per_identity").value = data.default_limit_per_identity;
 
-      document.getElementById("max_prints_per_mac").value = data.max_prints_per_mac;
+        renderDeviceList(data.records);
+      } catch (e) {
+        console.error(e);
+      }
+    }
 
-      const wrap = document.getElementById("deviceLimitList");
+    function renderDeviceList(records) {
+      const wrap = document.getElementById("quotaDeviceList");
       wrap.innerHTML = "";
 
-      if (!data.devices.length) {
-        wrap.innerHTML = "<p style='color:#7a7268;font-size:13px;'>Nessun dispositivo registrato.</p>";
+      if (!records.length) {
+        wrap.innerHTML = "<p class='helper'>Nessun dispositivo registrato.</p>";
         return;
       }
 
-      data.devices.forEach(d => {
-        const row = document.createElement("div");
-        row.style.padding = "10px";
-        row.style.border = "1px solid #eee7df";
-        row.style.borderRadius = "10px";
-        row.style.marginBottom = "8px";
-        row.innerHTML = `
-          <div><b>${d.mac}</b></div>
-          <div style="font-size:13px;color:#6f675f;">Usate: ${d.prints_used} · Rimanenti: ${d.remaining}</div>
-          <button type="button" class="muted" onclick="resetDeviceLimit('${d.mac}')">Reset</button>
+      records.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "quota-row";
+        div.innerHTML = `
+          <div class="quota-key">${r.identity_key.substring(0, 28)}...</div>
+          <div><b>Usate:</b> ${r.prints_used} | <b>Rimanenti:</b> ${r.remaining}</div>
+          <div class="helper">IP: ${r.meta?.ip || "-"} | MAC: ${r.meta?.mac || "-"} | Evento: ${r.meta?.event_code || "-"}</div>
+          <button type="button" class="muted" onclick="resetQuota('${r.identity_key}')">Reset</button>
         `;
-        wrap.appendChild(row);
+        wrap.appendChild(div);
       });
-    } catch (e) {
-      console.error(e);
     }
-  }
 
-  async function resetDeviceLimit(mac) {
-    const fd = new FormData();
-    fd.append("mac", mac);
+    async function resetQuota(identity_key) {
+      const fd = new FormData();
+      fd.append("identity_key", identity_key);
 
-    const response = await fetch("/admin/device-limits/reset", {
-      method: "POST",
-      body: fd
-    });
+      const res = await fetch("/admin/print-quotas/reset", {
+        method: "POST",
+        body: fd
+      });
 
-    const data = await response.json();
-    setStatus(data.message || "Operazione completata.");
-    loadDeviceLimits();
-  }
+      const data = await res.json();
+      setStatus(data.message || "Reset completato");
+      loadQuotaConfig();
+    }
 
-  document.getElementById("deviceLimitForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-
-    const response = await fetch("/admin/device-limits/config", {
-      method: "POST",
-      body: fd
-    });
-
-    const data = await response.json();
-    setStatus(data.message || "Operazione completata.");
-    loadDeviceLimits();
-  });
-
-  loadDeviceLimits();
-
-  async function loadQuotaConfig() {
-  try {
-    const res = await fetch("/admin/print-quotas");
-    const data = await res.json();
-
-    if (!data.success) return;
-
-    document.getElementById("event_code").value = data.event_code;
-    document.getElementById("default_limit_per_identity").value = data.default_limit_per_identity;
-
-    renderDeviceList(data.records);
-
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-function renderDeviceList(records) {
-  const wrap = document.getElementById("quotaDeviceList");
-  wrap.innerHTML = "";
-
-  if (!records.length) {
-    wrap.innerHTML = "<p style='color:#777;'>Nessun dispositivo</p>";
-    return;
-  }
-
-  records.forEach(r => {
-    const div = document.createElement("div");
-    div.style.border = "1px solid #eee";
-    div.style.padding = "10px";
-    div.style.borderRadius = "10px";
-    div.style.marginBottom = "8px";
-
-    div.innerHTML = `
-      <div style="font-size:12px;color:#999;">${r.identity_key.substring(0, 16)}...</div>
-      <div><b>Usate:</b> ${r.prints_used} | <b>Rimanenti:</b> ${r.remaining}</div>
-      <div style="font-size:12px;color:#666;">IP: ${r.meta?.ip || "-"} | MAC: ${r.meta?.mac || "-"}</div>
-      <button onclick="resetQuota('${r.identity_key}')">Reset</button>
-    `;
-
-    wrap.appendChild(div);
-  });
-}
-
-async function resetQuota(identity_key) {
-  const fd = new FormData();
-  fd.append("identity_key", identity_key);
-
-  const res = await fetch("/admin/print-quotas/reset", {
-    method: "POST",
-    body: fd
-  });
-
-  const data = await res.json();
-  setStatus(data.message || "Reset completato");
-
-  loadQuotaConfig();
-}
-
-document.getElementById("quotaConfigForm").addEventListener("submit", async (e) => {
+   document.getElementById("quotaConfigForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const fd = new FormData(e.target);
@@ -968,10 +1113,48 @@ document.getElementById("quotaConfigForm").addEventListener("submit", async (e) 
   setStatus(data.message || "Salvato");
 
   loadQuotaConfig();
+  loadEventQr();
 });
 
-loadQuotaConfig();
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedGroup = localStorage.getItem("admin_section_group");
+      const savedSection = localStorage.getItem("admin_section") || "all";
 
+      if (savedGroup) {
+        try {
+          const ids = JSON.parse(savedGroup);
+          showSectionGroup(ids);
+          return;
+        } catch (e) {}
+      }
+
+      showSection(savedSection);
+    });
+
+    loadJobs();
+    setInterval(loadJobs, 5000);
+    loadTemplateBoxesSelector();
+    loadQuotaConfig();
+
+    async function loadEventQr() {
+  try {
+    const response = await fetch("/admin/event-qr-info");
+    const data = await response.json();
+
+    if (!data.success) {
+      setStatus(data.message || "Errore caricamento QR.");
+      return;
+    }
+
+    document.getElementById("qrEventCodeView").value = data.event_code;
+    document.getElementById("qrIpView").value = data.ip;
+    document.getElementById("qrUrlView").value = data.url;
+    document.getElementById("eventQrImg").src = "/admin/event-qr-image?t=" + Date.now();
+  } catch (e) {
+    setStatus("Errore di connessione nel caricamento QR.");
+  }
+  loadEventQr();
+}
   </script>
 </body>
 </html>
