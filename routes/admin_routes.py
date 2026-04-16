@@ -26,6 +26,7 @@ def register_admin_routes(app,
      image_service, 
      admin_required,
      device_limit_service,
+     devide_identity_service,
      print_quota_service,
      ):
     @app.route("/admin/login", methods=["GET", "POST"])
