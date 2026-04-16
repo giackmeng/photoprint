@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ config.brand_name }} Print Station</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.95), rgba(243,237,230,1)),
+        linear-gradient(135deg, #f7f4ef, #ede5db);
+      color: #1f1f1f;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 26px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    }
+    .brand {
+      text-align: center;
+      margin-bottom: 6px;
+      letter-spacing: 0.22em;
+      font-size: 14px;
+      color: #7a6b5c;
+    }
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 30px;
+      font-weight: 600;
+    }
+    .subtitle {
+      margin: 0 0 8px;
+      text-align: center;
+      color: #6f6a64;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .event {
+      text-align: center;
+      color: #8a8177;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    .queue-badge {
+      display: inline-block;
+      margin: 0 auto 18px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #f3eee8;
+      color: #6a6158;
+      font-size: 13px;
+    }
+    .upload-box {
+      border: 1.5px dashed #d7cec3;
+      border-radius: 20px;
+      background: #fcfbf9;
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    input[type="file"] { display: none; }
+    .file-label {
+      display: inline-block;
+      background: #1b1b1b;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    #preview, #layoutPreview {
+      width: 100%;
+      max-height: 420px;
+      object-fit: contain;
+      border-radius: 16px;
+      display: none;
+      background: #fff;
+      border: 1px solid #eee7df;
+      margin-top: 12px;
+    }
+    .filename {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #6e675f;
+      word-break: break-word;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      color: #554f48;
+    }
+    .field select {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid #ddd4ca;
+      background: white;
+      font-size: 15px;
+    }
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 16px;
+      background: #1b1b1b;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      margin-top: 10px;
+      background: #ece6de;
+      color: #3e3833;
+    }
+    .btn:disabled {
+      background: #b9b1a9;
+      cursor: not-allowed;
+    }
+    .loader {
+      display: none;
+      margin: 16px auto 0;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #e0d8cf;
+      border-top: 3px solid #1b1b1b;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .loader.show { display: block; }
+    .status {
+      display: none;
+      margin-top: 16px;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .status.info {
+      display: block;
+      background: #f5f2ee;
+      color: #504941;
+    }
+    .status.success {
+      display: block;
+      background: #eaf7ed;
+      color: #17653c;
+    }
+    .status.error {
+      display: block;
+      background: #fdeceb;
+      color: #ae2d24;
+    }
+    .note {
+      margin-top: 14px;
+      text-align: center;
+      color: #8c847a;
+      font-size: 12px;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @media (max-width: 520px) {
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">{{ config.brand_name }}</div>
+    <h1>Print Station</h1>
+    <p class="subtitle">{{ config.brand_tagline }}</p>
+    <div class="event">{{ config.event_name }} · {{ config.event_date }}</div>
+
+    <div style="text-align:center;">
+      <div class="queue-badge" id="queueInfo">Caricamento stato coda...</div>
+    </div>
+
+    <form id="uploadForm">
+     <div class="upload-box">
+  <label for="photo" class="file-label">Scegli foto</label>
+  <input type="file" id="photo" name="photo" accept="image/*" multiple required>
+
+  <div class="filename" id="filename"></div>
+  <div id="previewGrid" style="display:none; margin-top:12px; grid-template-columns:repeat(2,1fr); gap:10px;"></div>
+</div>
+
+      <div class="row">
+        <div class="field">
+          <label for="print_format">Formato</label>
+          <select id="print_format" name="print_format">
+            <option value="10x15">10x15</option>
+            <option value="strip">Strip personalizzata</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="copies">Copie</label>
+          <select id="copies" name="copies">
+            {% for n in range(1, config.max_copies + 1) %}
+            <option value="{{ n }}">{{ n }} copia{% if n > 1 %}e{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-secondary" id="previewBtn" disabled>Anteprima layout</button>
+      <img id="layoutPreview" alt="Anteprima layout finale">
+
+      <button type="submit" class="btn" id="printBtn" disabled style="margin-top:10px;">Invia in stampa</button>
+      <div class="loader" id="loader"></div>
+      <div class="status" id="status"></div>
+      <div class="note">JPG, JPEG, PNG, WEBP · massimo 20 MB</div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const photoInput = document.getElementById("photo");
+    const preview = document.getElementById("preview");
+    const layoutPreview = document.getElementById("layoutPreview");
+    const filename = document.getElementById("filename");
+    const printBtn = document.getElementById("printBtn");
+    const previewBtn = document.getElementById("previewBtn");
+    const loader = document.getElementById("loader");
+    const statusBox = document.getElementById("status");
+    const queueInfo = document.getElementById("queueInfo");
+
+    let sending = false;
+
+    function setStatus(type, message) {
+      statusBox.className = "status " + type;
+      statusBox.textContent = message;
+    }
+
+    function resetStatus() {
+      statusBox.className = "status";
+      statusBox.textContent = "";
+    }
+
+    async function refreshQueueInfo() {
+      try {
+        const response = await fetch("/queue-info");
+        const data = await response.json();
+        if (data.processing > 0) {
+          queueInfo.textContent = "Stampa in corso · " + data.queued + " job in attesa";
+        } else if (data.queued > 0) {
+          queueInfo.textContent = data.queued + " job in coda";
+        } else {
+          queueInfo.textContent = "Nessuna attesa · sistema pronto";
+        }
+      } catch (e) {
+        queueInfo.textContent = "Sistema pronto";
+      }
+    }
+
+    async function loadPreview() {
+      const file = photoInput.files[0];
+      if (!file) {
+        setStatus("error", "Seleziona una foto.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("photo", file);
+      formData.append("print_format", document.getElementById("print_format").value);
+
+      previewBtn.disabled = true;
+      setStatus("info", "Generazione anteprima in corso...");
+
+      try {
+        const response = await fetch("/preview", {
+          method: "POST",
+          body: formData
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          layoutPreview.src = result.preview;
+          layoutPreview.style.display = "block";
+          setStatus("success", "Anteprima layout aggiornata.");
+        } else {
+          setStatus("error", result.message || "Errore generazione anteprima.");
+        }
+      } catch (e) {
+        setStatus("error", "Errore di connessione durante l'anteprima.");
+      } finally {
+        previewBtn.disabled = false;
+      }
+    }
+
+    photoInput.addEventListener("change", function() {
+      resetStatus();
+      const file = this.files[0];
+
+      if (!file) {
+        preview.style.display = "none";
+        preview.src = "";
+        layoutPreview.style.display = "none";
+        layoutPreview.src = "";
+        filename.textContent = "";
+        printBtn.disabled = true;
+        previewBtn.disabled = true;
+        return;
+      }
+
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+      filename.textContent = file.name;
+      printBtn.disabled = false;
+      previewBtn.disabled = false;
+      layoutPreview.style.display = "none";
+      layoutPreview.src = "";
+    });
+
+    document.getElementById("print_format").addEventListener("change", function() {
+      layoutPreview.style.display = "none";
+      layoutPreview.src = "";
+    });
+
+    previewBtn.addEventListener("click", loadPreview);
+
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      if (sending) return;
+
+      const file = photoInput.files[0];
+      if (!file) {
+        setStatus("error", "Seleziona una foto.");
+        return;
+      }
+
+      sending = true;
+      printBtn.disabled = true;
+      loader.classList.add("show");
+      setStatus("info", "Foto ricevuta. Invio alla coda di stampa...");
+
+      const formData = new FormData();
+      formData.append("photo", file);
+      formData.append("print_format", document.getElementById("print_format").value);
+      formData.append("copies", document.getElementById("copies").value);
+
+      try {
+        const response = await fetch("/print", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          window.location.href = result.redirect;
+          return;
+        } else {
+          setStatus("error", result.message || "Errore durante l'invio.");
+        }
+      } catch (error) {
+        setStatus("error", "Errore di connessione al server.");
+      } finally {
+        sending = false;
+        loader.classList.remove("show");
+        printBtn.disabled = false;
+        refreshQueueInfo();
+      }
+    });
+
+    refreshQueueInfo();
+    setInterval(refreshQueueInfo, 4000);
+  </script>
+</body>
+</html>

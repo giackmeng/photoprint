@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stato stampa</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.95), rgba(243,237,230,1)),
+        linear-gradient(135deg, #f7f4ef, #ede5db);
+      color: #1f1f1f;
+      text-align: center;
+    }
+    .card {
+      width: 100%;
+      max-width: 540px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 28px;
+      padding: 34px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .brand {
+      letter-spacing: 0.24em;
+      color: #7a6b5c;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0 0 14px;
+      font-size: 32px;
+    }
+    p {
+      margin: 0 0 22px;
+      color: #625c55;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #f3eee8;
+      color: #61584f;
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 20px;
+      border-radius: 14px;
+      background: #1b1b1b;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+    .small {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #8a8177;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">{{ config.brand_name }}</div>
+    <h1>Stato stampa</h1>
+
+    {% if job %}
+      <div class="status-pill" id="statusPill">Caricamento stato...</div>
+      <p id="statusText">Stiamo verificando il tuo job di stampa.</p>
+      <div class="small" id="queueText"></div>
+      <a class="btn" href="/">Nuova stampa</a>
+
+      <script>
+        const jobId = "{{ job.id }}";
+
+        async function refreshStatus() {
+          try {
+            const response = await fetch("/status/" + jobId);
+            const data = await response.json();
+
+            const pill = document.getElementById("statusPill");
+            const statusText = document.getElementById("statusText");
+            const queueText = document.getElementById("queueText");
+
+            if (!data.success) {
+              pill.textContent = "Job non trovato";
+              statusText.textContent = "Non è stato possibile recuperare lo stato.";
+              return;
+            }
+
+            if (data.status === "queued") {
+              pill.textContent = "In coda";
+              statusText.textContent = "La tua foto è stata ricevuta correttamente.";
+              queueText.textContent = data.queue_position > 0
+                ? "Posizione in coda: " + data.queue_position
+                : "";
+            } else if (data.status === "processing") {
+              pill.textContent = "In stampa";
+              statusText.textContent = "La tua foto è in preparazione o in invio alla stampante.";
+              queueText.textContent = "";
+            } else if (data.status === "done") {
+              pill.textContent = "Stampa inviata";
+              statusText.textContent = "La tua foto è stata inviata correttamente alla stampante.";
+              queueText.textContent = "";
+            } else if (data.status === "error") {
+              pill.textContent = "Errore";
+              statusText.textContent = data.message || "Si è verificato un errore.";
+              queueText.textContent = "";
+            }
+          } catch (e) {
+            document.getElementById("statusPill").textContent = "Connessione assente";
+            document.getElementById("statusText").textContent = "Non è stato possibile aggiornare lo stato della stampa.";
+          }
+        }
+
+        refreshStatus();
+        setInterval(refreshStatus, 3000);
+      </script>
+    {% else %}
+      <div class="status-pill">Nessun job</div>
+      <p>Non è stato trovato alcun job di stampa da monitorare.</p>
+      <a class="btn" href="/">Torna alla home</a>
+    {% endif %}
+  </div>
+</body>
+</html>

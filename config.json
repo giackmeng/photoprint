@@ -1,0 +1,11 @@
+{
+  "printer_name": "photobooth_dnp_dsrx1",
+  "brand_name": "Umbria Emotions Photobooth",
+  "brand_tagline": "Luxury Photobooth Experience",
+  "event_name": "Giulia & Marco",
+  "event_date": "22.05.2027",
+  "max_copies": 6,
+  "max_file_age_hours": 1,
+  "admin_password": "giacomo91",
+  "session_secret": "epoque-secret-local"
+}

@@ -1,0 +1,130 @@
+{
+  "active_template_10x15": "classic_generated",
+  "active_template_strip": "aaaa",
+  "templates": [
+    {
+      "id": "classic_generated",
+      "label": "Classic Generated 10x15",
+      "print_format": "10x15",
+      "mode": "generated",
+      "background_color": "#f8f5f0",
+      "photo_box": [
+        100,
+        80,
+        1000,
+        1350
+      ],
+      "show_brand": true,
+      "show_event_name": true,
+      "show_event_date": true,
+      "rotate_landscape": true
+    },
+    {
+      "id": "wedding_canva",
+      "label": "Wedding Canva 10x15",
+      "print_format": "10x15",
+      "mode": "image_template",
+      "template_file": "template_wedding_10x15.png",
+      "photo_box": [
+        120,
+        100,
+        1560,
+        900
+      ],
+      "photo_fit": "cover",
+      "rotate_landscape": false
+    },
+    {
+      "id": "party_canva",
+      "label": "Party Canva 10x15",
+      "print_format": "10x15",
+      "mode": "image_template",
+      "template_file": "template_party_10x15.png",
+      "photo_box": [
+        90,
+        90,
+        1020,
+        1360
+      ],
+      "photo_fit": "contain",
+      "rotate_landscape": false
+    },
+    {
+      "id": "strip_luxury",
+      "label": "Strip Luxury Canva",
+      "print_format": "strip",
+      "mode": "image_template_multi",
+      "template_file": "template_strip_luxury.png",
+      "photo_boxes": [
+        [
+          30,
+          30,
+          540,
+          350
+        ],
+        [
+          30,
+          390,
+          540,
+          350
+        ],
+        [
+          30,
+          750,
+          540,
+          350
+        ]
+      ],
+      "photo_fit": "cover"
+    },
+    {
+      "id": "auto_layout",
+      "label": "Auto Layout (portrait/landscape)",
+      "print_format": "10x15",
+      "mode": "auto_orientation",
+      "template_portrait": "template_layout_verticale.png",
+      "template_landscape": "template_layout_orizzontale.png",
+      "photo_box_portrait": [
+        110,
+        120,
+        980,
+        1280
+      ],
+      "photo_box_landscape": [
+        120,
+        100,
+        1560,
+        900
+      ],
+      "photo_fit": "cover"
+    },
+    {
+      "id": "aaaa",
+      "label": "eeeraaa",
+      "print_format": "strip",
+      "mode": "image_template_multi",
+      "template_file": "aaaa.png",
+      "photo_boxes": [
+        [
+          30,
+          250,
+          540,
+          450
+        ],
+        [
+          30,
+          724,
+          540,
+          450
+        ],
+        [
+          30,
+          1198,
+          540,
+          450
+        ]
+      ],
+      "photo_fit": "cover"
+    }
+  ]
+}

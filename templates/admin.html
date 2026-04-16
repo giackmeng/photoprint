@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ config.brand_name }} Admin</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f6f3ef;
+      color: #222;
+      padding: 24px;
+    }
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 30px;
+    }
+    .sub {
+      color: #6f675f;
+      margin-bottom: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.05);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat {
+      background: white;
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.05);
+    }
+    .stat b {
+      display: block;
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: #5f5750;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+ input, select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd4ca;
+  border-radius: 12px;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  background: #fff;
+}
+    button, a.btn {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: bold;
+      background: #1b1b1b;
+      color: white;
+      text-decoration: none;
+      display: inline-block;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    .muted {
+      background: #ddd4ca;
+      color: #403a35;
+    }
+    .status {
+      margin: 14px 0 20px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #efe8df;
+      color: #4f473f;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #eee7df;
+      text-align: left;
+      font-size: 14px;
+      vertical-align: top;
+    }
+    th {
+      background: #faf7f3;
+      color: #5e564e;
+    }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #f2ece5;
+      color: #5a534b;
+    }
+    .queued { background: #efe8df; }
+    .processing { background: #fff4d8; }
+    .done { background: #e4f5e8; }
+    .error { background: #fde7e5; }
+
+    .preview-box {
+  position: absolute;
+  border: 2px solid rgba(200, 40, 40, 0.95);
+  background: rgba(200, 40, 40, 0.12);
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: move;
+  touch-action: none;
+}
+
+.preview-box-label {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  background: rgba(200, 40, 40, 0.95);
+  color: white;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.preview-resize-handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  right: -8px;
+  bottom: -8px;
+  background: rgba(200, 40, 40, 0.95);
+  border-radius: 50%;
+  cursor: nwse-resize;
+}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>{{ config.brand_name }} Admin Panel</h1>
+    <div class="sub">{{ config.event_name }} · {{ config.event_date }}</div>
+
+    <div class="stats" id="statsWrap">
+      <div class="stat"><b id="s_total">{{ stats.total }}</b>Job totali</div>
+      <div class="stat"><b id="s_done">{{ stats.done }}</b>Completati</div>
+      <div class="stat"><b id="s_copies">{{ stats.total_copies }}</b>Copie stampate</div>
+      <div class="stat"><b id="s_queue">{{ stats.queued }}</b>In coda</div>
+      <div class="stat"><b id="s_processing">{{ stats.processing }}</b>In lavorazione</div>
+      <div class="stat"><b id="s_errors">{{ stats.errors }}</b>Errori</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Configurazione evento</h3>
+        <form id="configForm">
+          <label>Nome stampante</label>
+          <input name="printer_name" value="{{ config.printer_name }}" required>
+
+          <label>Brand</label>
+          <input name="brand_name" value="{{ config.brand_name }}" required>
+
+          <label>Tagline</label>
+          <input name="brand_tagline" value="{{ config.brand_tagline }}" required>
+
+          <label>Nome evento</label>
+          <input name="event_name" value="{{ config.event_name }}" required>
+
+          <label>Data evento</label>
+          <input name="event_date" value="{{ config.event_date }}" required>
+
+          <label>Max copie</label>
+          <input name="max_copies" type="number" min="1" max="10" value="{{ config.max_copies }}" required>
+
+          <label>Ore conservazione file</label>
+          <input name="max_file_age_hours" type="number" min="1" max="168" value="{{ config.max_file_age_hours }}" required>
+
+          <button type="submit">Salva configurazione</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Azioni rapide</h3>
+        <button id="refreshBtn">Aggiorna storico</button>
+        <button id="reprintLastBtn">Ristampa ultimo job</button>
+        <button id="cleanupBtn" class="muted">Pulizia</button>
+        <a class="btn muted" href="/admin/export">Esporta CSV</a>
+        <a class="btn muted" href="/admin/logout">Logout</a>
+
+        <hr style="margin:18px 0;border:none;border-top:1px solid #eee7df;">
+
+        <h3>Upload logo</h3>
+        <form id="logoForm">
+          <input type="file" name="logo" accept="image/*" required>
+          <button type="submit">Carica logo</button>
+        </form>
+      </div>
+      <div class="card">
+  <h3>Carica template Canva / Photoshop</h3>
+
+  <form id="templateUploadForm">
+    <label>ID template</label>
+    <input type="text" name="template_id" placeholder="es. wedding_canva_01" required>
+
+    <label>Nome visibile</label>
+    <input type="text" name="label" placeholder="es. Wedding Canva 01" required>
+
+    <label>Formato</label>
+    <select name="print_format" required>
+      <option value="10x15">10x15</option>
+      <option value="strip">Strip</option>
+    </select>
+
+    <label>Tipo template</label>
+    <select name="mode" required>
+      <option value="image_template">Template singolo</option>
+      <option value="image_template_multi">Template multi-box</option>
+    </select>
+
+    <label>File template</label>
+    <input type="file" name="template_file" accept=".png,.jpg,.jpeg,.webp" required>
+
+    <button type="submit">Carica template</button>
+  </form>
+
+  <p style="font-size:12px;color:#7a7268;margin-top:10px;">
+    Dimensioni richieste: 10x15 = 1200x1800 px · strip = 600x1800 px
+  </p>
+</div>
+    </div>
+    
+<div class="card">
+  <h3>Modifica box foto template</h3>
+
+  <form id="templateBoxesForm">
+    <label for="edit_template_id">Template</label>
+    <select name="template_id" id="edit_template_id" required></select>
+
+    <label for="edit_photo_fit">Photo fit</label>
+    <select name="photo_fit" id="edit_photo_fit">
+      <option value="cover">cover</option>
+      <option value="contain">contain</option>
+    </select>
+
+    <div id="singleBoxFields">
+      <label>X</label>
+      <input type="number" name="photo_x" id="photo_x">
+
+      <label>Y</label>
+      <input type="number" name="photo_y" id="photo_y">
+
+      <label>Larghezza</label>
+      <input type="number" name="photo_w" id="photo_w">
+
+      <label>Altezza</label>
+      <input type="number" name="photo_h" id="photo_h">
+    </div>
+
+    <div id="multiBoxFields" style="display:none;">
+      <h4>Box 1</h4>
+      <input type="number" name="box1_x" id="box1_x" placeholder="X">
+      <input type="number" name="box1_y" id="box1_y" placeholder="Y">
+      <input type="number" name="box1_w" id="box1_w" placeholder="Larghezza">
+      <input type="number" name="box1_h" id="box1_h" placeholder="Altezza">
+
+      <h4>Box 2</h4>
+      <input type="number" name="box2_x" id="box2_x" placeholder="X">
+      <input type="number" name="box2_y" id="box2_y" placeholder="Y">
+      <input type="number" name="box2_w" id="box2_w" placeholder="Larghezza">
+      <input type="number" name="box2_h" id="box2_h" placeholder="Altezza">
+
+      <h4>Box 3</h4>
+      <input type="number" name="box3_x" id="box3_x" placeholder="X">
+      <input type="number" name="box3_y" id="box3_y" placeholder="Y">
+      <input type="number" name="box3_w" id="box3_w" placeholder="Larghezza">
+      <input type="number" name="box3_h" id="box3_h" placeholder="Altezza">
+    </div>
+
+    <button type="submit">Salva box foto</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Editor visuale box template</h3>
+
+  <div id="templatePreviewWrap" style="position:relative; width:100%; max-width:420px; margin:0 auto; user-select:none;">
+    <img id="templatePreviewImage" src="" alt="Anteprima template" style="width:100%; display:block; border-radius:16px; border:1px solid #ddd4ca;">
+    <div id="templatePreviewOverlay" style="position:absolute; inset:0;"></div>
+  </div>
+
+  <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+    <button type="button" id="saveVisualBoxesBtn">Salva box correnti</button>
+    <button type="button" class="muted" id="reloadTemplateBtn">Ricarica template</button>
+  </div>
+
+  <p style="font-size:12px;color:#7a7268;text-align:center;margin-top:10px;">
+    Trascina il riquadro per spostarlo. Usa l’angolo in basso a destra per ridimensionarlo.
+  </p>
+</div>
+<div class="card">
+  <h3>Preview reale (foto nel template)</h3>
+
+  <input type="file" id="testPhotoInput" accept="image/*">
+
+  <div style="margin-top:15px;text-align:center;">
+    <img id="renderPreviewImg" style="max-width:100%; border-radius:12px; border:1px solid #ddd;">
+  </div>
+</div>
+
+<div class="card">
+  <h3>Template attivi</h3>
+  <form id="templatesForm">
+    <label for="active_template_10x15">Template 10x15</label>
+    <select name="active_template_10x15" id="active_template_10x15" required>
+      {% for tpl in templates_10x15 %}
+        <option value="{{ tpl.id }}"
+          {% if templates_cfg.active_template_10x15 == tpl.id %}selected{% endif %}>
+          {{ tpl.label }} ({{ tpl.id }})
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="active_template_strip">Template strip</label>
+    <select name="active_template_strip" id="active_template_strip" required>
+      {% for tpl in templates_strip %}
+        <option value="{{ tpl.id }}"
+          {% if templates_cfg.active_template_strip == tpl.id %}selected{% endif %}>
+          {{ tpl.label }} ({{ tpl.id }})
+        </option>
+      {% endfor %}
+    </select>
+
+    <button type="submit">Salva template attivi</button>
+  </form>
+</div>
+
+    <div class="status" id="statusBox">Pannello pronto.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Ora</th>
+          <th>ID</th>
+          <th>Stato</th>
+          <th>Formato</th>
+          <th>Copie</th>
+          <th>Messaggio</th>
+          <th>Azioni</th>
+        </tr>
+      </thead>
+      <tbody id="jobsBody">
+        {% for job in jobs %}
+        <tr>
+          <td>{{ job.created_at }}</td>
+          <td>{{ job.id }}</td>
+          <td><span class="pill {{ job.status }}">{{ job.status }}</span></td>
+          <td>{{ job.print_format }}</td>
+          <td>{{ job.copies }}</td>
+          <td>{{ job.message }}</td>
+          <td>
+            <button onclick="reprintJob('{{ job.id }}')">Ristampa</button>
+            {% if job.status == 'queued' %}
+              <button class="muted" onclick="cancelJob('{{ job.id }}')">Annulla</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+ <script>
+  const jobsBody = document.getElementById("jobsBody");
+  const statusBox = document.getElementById("statusBox");
+
+  function setStatus(msg) {
+    statusBox.textContent = msg;
+  }
+
+  function updateStats(stats) {
+    document.getElementById("s_total").textContent = stats.total;
+    document.getElementById("s_done").textContent = stats.done;
+    document.getElementById("s_copies").textContent = stats.total_copies;
+    document.getElementById("s_queue").textContent = stats.queued;
+    document.getElementById("s_processing").textContent = stats.processing;
+    document.getElementById("s_errors").textContent = stats.errors;
+  }
+
+  async function loadJobs() {
+    try {
+      const response = await fetch("/admin/jobs");
+      const data = await response.json();
+
+      if (!data.success) {
+        setStatus("Errore caricamento job.");
+        return;
+      }
+
+      jobsBody.innerHTML = "";
+
+      data.jobs.forEach(job => {
+        const cancelBtn = job.status === "queued"
+          ? `<button class="muted" onclick="cancelJob('${job.id}')">Annulla</button>`
+          : "";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${job.created_at}</td>
+          <td>${job.id}</td>
+          <td><span class="pill ${job.status}">${job.status}</span></td>
+          <td>${job.print_format}</td>
+          <td>${job.copies}</td>
+          <td>${job.message}</td>
+          <td>
+            <button onclick="reprintJob('${job.id}')">Ristampa</button>
+            ${cancelBtn}
+          </td>
+        `;
+        jobsBody.appendChild(row);
+      });
+
+      updateStats(data.stats);
+      setStatus("Storico aggiornato.");
+    } catch (e) {
+      setStatus("Errore di connessione al pannello admin.");
+    }
+  }
+
+  async function reprintJob(jobId) {
+    const response = await fetch("/admin/reprint/" + jobId, { method: "POST" });
+    const data = await response.json();
+    setStatus(data.message || "Operazione completata.");
+    loadJobs();
+  }
+
+  async function cancelJob(jobId) {
+    const response = await fetch("/admin/cancel/" + jobId, { method: "POST" });
+    const data = await response.json();
+    setStatus(data.message || "Operazione completata.");
+    loadJobs();
+  }
+
+  document.getElementById("refreshBtn").addEventListener("click", loadJobs);
+
+  document.getElementById("reprintLastBtn").addEventListener("click", async () => {
+    const response = await fetch("/admin/reprint-last", { method: "POST" });
+    const data = await response.json();
+    setStatus(data.message || "Operazione completata.");
+    loadJobs();
+  });
+
+  document.getElementById("cleanupBtn").addEventListener("click", async () => {
+    const response = await fetch("/admin/cleanup", { method: "POST" });
+    const data = await response.json();
+    setStatus(data.message || "Pulizia completata.");
+    loadJobs();
+  });
+
+  document.getElementById("configForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const response = await fetch("/admin/config", {
+      method: "POST",
+      body: formData
+    });
+    const data = await response.json();
+    setStatus(data.message || "Configurazione aggiornata.");
+  });
+
+  document.getElementById("logoForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const response = await fetch("/admin/upload-logo", {
+      method: "POST",
+      body: formData
+    });
+    const data = await response.json();
+    setStatus(data.message || "Logo aggiornato.");
+  });
+
+  document.getElementById("templatesForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const response = await fetch("/admin/templates", {
+      method: "POST",
+      body: formData
+    });
+    const data = await response.json();
+    setStatus(data.message || "Template aggiornati.");
+  });
+
+  loadJobs();
+  setInterval(loadJobs, 5000);
+  
+   async function refreshTemplateSelectors() {
+    try {
+      const response = await fetch("/admin/templates-list");
+      const data = await response.json();
+
+      if (!data.success) return;
+
+      const select10 = document.getElementById("active_template_10x15");
+      const selectStrip = document.getElementById("active_template_strip");
+
+      if (!select10 || !selectStrip) return;
+
+      select10.innerHTML = "";
+      selectStrip.innerHTML = "";
+
+      const templates10 = data.templates.filter(t => t.print_format === "10x15");
+      const templatesStrip = data.templates.filter(t => t.print_format === "strip");
+
+      templates10.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = `${t.label} (${t.id})`;
+        if (data.active_template_10x15 === t.id) opt.selected = true;
+        select10.appendChild(opt);
+      });
+
+      templatesStrip.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = `${t.label} (${t.id})`;
+        if (data.active_template_strip === t.id) opt.selected = true;
+        selectStrip.appendChild(opt);
+      });
+    } catch (e) {
+      console.error("Errore refresh template selectors", e);
+    }
+  }
+
+  document.getElementById("templateUploadForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    const response = await fetch("/admin/upload-template", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+    setStatus(data.message || "Operazione completata.");
+
+    if (data.success) {
+      e.target.reset();
+      refreshTemplateSelectors();
+    }
+  });
+
+  refreshTemplateSelectors();
+
+    async function loadTemplateBoxesSelector() {
+    try {
+      const response = await fetch("/admin/templates-list");
+      const data = await response.json();
+
+      if (!data.success) return;
+
+      const editSelect = document.getElementById("edit_template_id");
+      if (!editSelect) return;
+
+      const currentValue = editSelect.value;
+      editSelect.innerHTML = "";
+
+      data.templates.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = `${t.label} (${t.id})`;
+        editSelect.appendChild(opt);
+      });
+
+      if (currentValue && data.templates.some(t => t.id === currentValue)) {
+        editSelect.value = currentValue;
+        loadTemplateDetail(currentValue);
+      } else if (data.templates.length > 0) {
+        loadTemplateDetail(data.templates[0].id);
+      }
+    } catch (e) {
+      console.error("Errore caricamento selector box", e);
+    }
+  }
+
+  async function loadTemplateDetail(templateId) {
+    try {
+      const response = await fetch("/admin/template-detail/" + encodeURIComponent(templateId));
+      const data = await response.json();
+
+      if (!data.success) {
+        setStatus(data.message || "Template non trovato.");
+        return;
+      }
+
+      const tpl = data.template;
+      document.getElementById("edit_photo_fit").value = tpl.photo_fit || "cover";
+
+      const singleBoxFields = document.getElementById("singleBoxFields");
+      const multiBoxFields = document.getElementById("multiBoxFields");
+
+      if (tpl.mode === "image_template_multi" || tpl.print_format === "strip") {
+        singleBoxFields.style.display = "none";
+        multiBoxFields.style.display = "block";
+
+        const boxes = tpl.photo_boxes || [[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+
+        document.getElementById("box1_x").value = boxes[0]?.[0] ?? 0;
+        document.getElementById("box1_y").value = boxes[0]?.[1] ?? 0;
+        document.getElementById("box1_w").value = boxes[0]?.[2] ?? 0;
+        document.getElementById("box1_h").value = boxes[0]?.[3] ?? 0;
+
+        document.getElementById("box2_x").value = boxes[1]?.[0] ?? 0;
+        document.getElementById("box2_y").value = boxes[1]?.[1] ?? 0;
+        document.getElementById("box2_w").value = boxes[1]?.[2] ?? 0;
+        document.getElementById("box2_h").value = boxes[1]?.[3] ?? 0;
+
+        document.getElementById("box3_x").value = boxes[2]?.[0] ?? 0;
+        document.getElementById("box3_y").value = boxes[2]?.[1] ?? 0;
+        document.getElementById("box3_w").value = boxes[2]?.[2] ?? 0;
+        document.getElementById("box3_h").value = boxes[2]?.[3] ?? 0;
+      } else {
+        singleBoxFields.style.display = "block";
+        multiBoxFields.style.display = "none";
+
+        const box = tpl.photo_box || [0, 0, 0, 0];
+        document.getElementById("photo_x").value = box[0] ?? 0;
+        document.getElementById("photo_y").value = box[1] ?? 0;
+        document.getElementById("photo_w").value = box[2] ?? 0;
+        document.getElementById("photo_h").value = box[3] ?? 0;
+      }
+    } catch (e) {
+      setStatus("Errore caricamento dettaglio template.");
+    }
+  }
+
+  document.getElementById("edit_template_id").addEventListener("change", function () {
+    loadTemplateDetail(this.value);
+  });
+
+  document.getElementById("templateBoxesForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    const response = await fetch("/admin/template-boxes", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+    setStatus(data.message || "Box aggiornati.");
+  });
+
+  loadTemplateBoxesSelector();
+
+   //Preview template
+   let currentTemplateDetail = null;
+  let visualBoxesState = [];
+  let templateScaleX = 1;
+  let templateScaleY = 1;
+
+  function getOverlayRefs() {
+    return {
+      img: document.getElementById("templatePreviewImage"),
+      overlay: document.getElementById("templatePreviewOverlay")
+    };
+  }
+
+  function syncInputsFromVisualState() {
+    if (!currentTemplateDetail) return;
+
+    if (currentTemplateDetail.mode === "image_template_multi" || currentTemplateDetail.print_format === "strip") {
+      const boxes = visualBoxesState;
+
+      document.getElementById("box1_x").value = boxes[0]?.x ?? 0;
+      document.getElementById("box1_y").value = boxes[0]?.y ?? 0;
+      document.getElementById("box1_w").value = boxes[0]?.w ?? 0;
+      document.getElementById("box1_h").value = boxes[0]?.h ?? 0;
+
+      document.getElementById("box2_x").value = boxes[1]?.x ?? 0;
+      document.getElementById("box2_y").value = boxes[1]?.y ?? 0;
+      document.getElementById("box2_w").value = boxes[1]?.w ?? 0;
+      document.getElementById("box2_h").value = boxes[1]?.h ?? 0;
+
+      document.getElementById("box3_x").value = boxes[2]?.x ?? 0;
+      document.getElementById("box3_y").value = boxes[2]?.y ?? 0;
+      document.getElementById("box3_w").value = boxes[2]?.w ?? 0;
+      document.getElementById("box3_h").value = boxes[2]?.h ?? 0;
+    } else {
+      const box = visualBoxesState[0] || { x: 0, y: 0, w: 0, h: 0 };
+      document.getElementById("photo_x").value = box.x;
+      document.getElementById("photo_y").value = box.y;
+      document.getElementById("photo_w").value = box.w;
+      document.getElementById("photo_h").value = box.h;
+    }
+  }
+
+  function syncVisualStateFromInputs() {
+    if (!currentTemplateDetail) return;
+
+    if (currentTemplateDetail.mode === "image_template_multi" || currentTemplateDetail.print_format === "strip") {
+      visualBoxesState = [
+        {
+          x: parseInt(document.getElementById("box1_x").value || "0", 10),
+          y: parseInt(document.getElementById("box1_y").value || "0", 10),
+          w: parseInt(document.getElementById("box1_w").value || "0", 10),
+          h: parseInt(document.getElementById("box1_h").value || "0", 10)
+        },
+        {
+          x: parseInt(document.getElementById("box2_x").value || "0", 10),
+          y: parseInt(document.getElementById("box2_y").value || "0", 10),
+          w: parseInt(document.getElementById("box2_w").value || "0", 10),
+          h: parseInt(document.getElementById("box2_h").value || "0", 10)
+        },
+        {
+          x: parseInt(document.getElementById("box3_x").value || "0", 10),
+          y: parseInt(document.getElementById("box3_y").value || "0", 10),
+          w: parseInt(document.getElementById("box3_w").value || "0", 10),
+          h: parseInt(document.getElementById("box3_h").value || "0", 10)
+        }
+      ];
+    } else {
+      visualBoxesState = [{
+        x: parseInt(document.getElementById("photo_x").value || "0", 10),
+        y: parseInt(document.getElementById("photo_y").value || "0", 10),
+        w: parseInt(document.getElementById("photo_w").value || "0", 10),
+        h: parseInt(document.getElementById("photo_h").value || "0", 10)
+      }];
+    }
+  }
+
+  function renderVisualBoxes() {
+    const { img, overlay } = getOverlayRefs();
+    if (!img || !overlay || !currentTemplateDetail) return;
+
+    overlay.innerHTML = "";
+
+    const renderedWidth = img.clientWidth;
+    const renderedHeight = img.clientHeight;
+    const naturalWidth = img.naturalWidth || renderedWidth;
+    const naturalHeight = img.naturalHeight || renderedHeight;
+
+    templateScaleX = renderedWidth / naturalWidth;
+    templateScaleY = renderedHeight / naturalHeight;
+
+    visualBoxesState.forEach((box, index) => {
+      const boxEl = document.createElement("div");
+      boxEl.className = "preview-box";
+      boxEl.dataset.index = index;
+
+      boxEl.style.left = (box.x * templateScaleX) + "px";
+      boxEl.style.top = (box.y * templateScaleY) + "px";
+      boxEl.style.width = (box.w * templateScaleX) + "px";
+      boxEl.style.height = (box.h * templateScaleY) + "px";
+
+      const label = document.createElement("div");
+      label.className = "preview-box-label";
+      label.textContent = visualBoxesState.length > 1 ? "Box " + (index + 1) : "Photo Box";
+
+      const handle = document.createElement("div");
+      handle.className = "preview-resize-handle";
+
+      boxEl.appendChild(label);
+      boxEl.appendChild(handle);
+      overlay.appendChild(boxEl);
+
+      enableBoxInteractions(boxEl, index, handle);
+     
+    });
+  }
+
+  function clampBox(box, maxW, maxH) {
+    box.w = Math.max(20, box.w);
+    box.h = Math.max(20, box.h);
+    box.x = Math.max(0, box.x);
+    box.y = Math.max(0, box.y);
+
+    if (box.x + box.w > maxW) box.x = Math.max(0, maxW - box.w);
+    if (box.y + box.h > maxH) box.y = Math.max(0, maxH - box.h);
+  }
+
+  function enableBoxInteractions(boxEl, index, handleEl) {
+    const { img } = getOverlayRefs();
+    const maxW = img.naturalWidth;
+    const maxH = img.naturalHeight;
+
+    let mode = null;
+    let startX = 0;
+    let startY = 0;
+    let startBox = null;
+
+    function onPointerMove(e) {
+      if (!mode) return;
+
+      const dx = (e.clientX - startX) / templateScaleX;
+      const dy = (e.clientY - startY) / templateScaleY;
+
+      const box = visualBoxesState[index];
+
+      if (mode === "move") {
+        box.x = Math.round(startBox.x + dx);
+        box.y = Math.round(startBox.y + dy);
+      } else if (mode === "resize") {
+        box.w = Math.round(startBox.w + dx);
+        box.h = Math.round(startBox.h + dy);
+      }
+
+      clampBox(box, maxW, maxH);
+      syncInputsFromVisualState();
+      renderVisualBoxes();
+      
+    }
+
+    function onPointerUp() {
+      mode = null;
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      updateRealPreview();
+    }
+
+    boxEl.addEventListener("pointerdown", (e) => {
+      if (e.target === handleEl) return;
+      e.preventDefault();
+
+      mode = "move";
+      startX = e.clientX;
+      startY = e.clientY;
+      startBox = { ...visualBoxesState[index] };
+
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+    });
+
+    handleEl.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      mode = "resize";
+      startX = e.clientX;
+      startY = e.clientY;
+      startBox = { ...visualBoxesState[index] };
+
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+    });
+  }
+
+  function loadTemplateImage(templateId, callback) {
+    const { img } = getOverlayRefs();
+    img.onload = () => {
+      if (callback) callback();
+    };
+    img.src = "/admin/template-preview-file/" + encodeURIComponent(templateId) + "?t=" + Date.now();
+  }
+
+  async function loadTemplateDetail(templateId) {
+    try {
+      const response = await fetch("/admin/template-detail/" + encodeURIComponent(templateId));
+      const data = await response.json();
+
+      if (!data.success) {
+        setStatus(data.message || "Template non trovato.");
+        return;
+      }
+
+      const tpl = data.template;
+      currentTemplateDetail = tpl;
+      document.getElementById("edit_photo_fit").value = tpl.photo_fit || "cover";
+
+      const singleBoxFields = document.getElementById("singleBoxFields");
+      const multiBoxFields = document.getElementById("multiBoxFields");
+
+      if (tpl.mode === "image_template_multi" || tpl.print_format === "strip") {
+        singleBoxFields.style.display = "none";
+        multiBoxFields.style.display = "block";
+
+        const boxes = tpl.photo_boxes || [[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+
+        document.getElementById("box1_x").value = boxes[0]?.[0] ?? 0;
+        document.getElementById("box1_y").value = boxes[0]?.[1] ?? 0;
+        document.getElementById("box1_w").value = boxes[0]?.[2] ?? 0;
+        document.getElementById("box1_h").value = boxes[0]?.[3] ?? 0;
+
+        document.getElementById("box2_x").value = boxes[1]?.[0] ?? 0;
+        document.getElementById("box2_y").value = boxes[1]?.[1] ?? 0;
+        document.getElementById("box2_w").value = boxes[1]?.[2] ?? 0;
+        document.getElementById("box2_h").value = boxes[1]?.[3] ?? 0;
+
+        document.getElementById("box3_x").value = boxes[2]?.[0] ?? 0;
+        document.getElementById("box3_y").value = boxes[2]?.[1] ?? 0;
+        document.getElementById("box3_w").value = boxes[2]?.[2] ?? 0;
+        document.getElementById("box3_h").value = boxes[2]?.[3] ?? 0;
+      } else {
+        singleBoxFields.style.display = "block";
+        multiBoxFields.style.display = "none";
+
+        const box = tpl.photo_box || [0, 0, 0, 0];
+        document.getElementById("photo_x").value = box[0] ?? 0;
+        document.getElementById("photo_y").value = box[1] ?? 0;
+        document.getElementById("photo_w").value = box[2] ?? 0;
+        document.getElementById("photo_h").value = box[3] ?? 0;
+      }
+
+      syncVisualStateFromInputs();
+      loadTemplateImage(tpl.id, renderVisualBoxes);
+    } catch (e) {
+      setStatus("Errore caricamento dettaglio template.");
+    }
+  }
+
+  function attachLivePreviewListeners() {
+    const ids = [
+      "edit_photo_fit",
+      "photo_x", "photo_y", "photo_w", "photo_h",
+      "box1_x", "box1_y", "box1_w", "box1_h",
+      "box2_x", "box2_y", "box2_w", "box2_h",
+      "box3_x", "box3_y", "box3_w", "box3_h"
+    ];
+
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      el.addEventListener("input", () => {
+        syncVisualStateFromInputs();
+        renderVisualBoxes();
+        updateRealPreview();
+      });
+
+      el.addEventListener("change", () => {
+        syncVisualStateFromInputs();
+        renderVisualBoxes();
+      });
+    });
+  }
+
+  async function loadTemplateBoxesSelector() {
+    try {
+      const response = await fetch("/admin/templates-list");
+      const data = await response.json();
+
+      if (!data.success) return;
+
+      const editSelect = document.getElementById("edit_template_id");
+      if (!editSelect) return;
+
+      const currentValue = editSelect.value;
+      editSelect.innerHTML = "";
+
+      data.templates.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = `${t.label} (${t.id})`;
+        editSelect.appendChild(opt);
+      });
+
+      if (currentValue && data.templates.some(t => t.id === currentValue)) {
+        editSelect.value = currentValue;
+        loadTemplateDetail(currentValue);
+      } else if (data.templates.length > 0) {
+        loadTemplateDetail(data.templates[0].id);
+      }
+    } catch (e) {
+      console.error("Errore caricamento selector box", e);
+    }
+  }
+
+  document.getElementById("edit_template_id").addEventListener("change", function () {
+    loadTemplateDetail(this.value);
+  });
+
+  document.getElementById("saveVisualBoxesBtn").addEventListener("click", async () => {
+    const form = document.getElementById("templateBoxesForm");
+    const formData = new FormData(form);
+
+    const response = await fetch("/admin/template-boxes", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+    setStatus(data.message || "Box aggiornati.");
+
+    if (data.success) {
+      loadTemplateDetail(document.getElementById("edit_template_id").value);
+    }
+  });
+
+  document.getElementById("reloadTemplateBtn").addEventListener("click", () => {
+    const templateId = document.getElementById("edit_template_id").value;
+    if (templateId) loadTemplateDetail(templateId);
+  });
+
+  document.getElementById("templateBoxesForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    const response = await fetch("/admin/template-boxes", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+    setStatus(data.message || "Box aggiornati.");
+
+    if (data.success) {
+      loadTemplateDetail(document.getElementById("edit_template_id").value);
+    }
+  });
+
+  attachLivePreviewListeners();
+  loadTemplateBoxesSelector(); 
+
+  //Preview Reale
+
+  document.getElementById("testPhotoInput").addEventListener("change", updateRealPreview);
+
+  async function updateRealPreview() {
+  const input = document.getElementById("testPhotoInput");
+  if (!input.files.length) return;
+
+  const form = document.getElementById("templateBoxesForm");
+  const formData = new FormData(form);
+
+  formData.append("template_id", document.getElementById("edit_template_id").value);
+  formData.append("photo", input.files[0]);
+
+  const response = await fetch("/admin/template-render-preview", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await response.json();
+
+  if (data.success) {
+    document.getElementById("renderPreviewImg").src = data.preview;
+  }
+}
+
+</script>
+        
+</body>
+</html>
