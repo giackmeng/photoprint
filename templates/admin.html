@@ -311,20 +311,24 @@
             </div>
           </div>
           <div class="card admin-section" id="section-qr-wifi">
-            <h3>QR Wi-Fi</h3>
+            <h3>Configurazione Wi-Fi</h3>
 
-            <label>SSID</label>
-            <input type="text" id="wifi_ssid" name="wifi_ssid">
+           <form id="wifiForm">
+              <label>SSID Wi-Fi</label>
+              <input type="text" name="wifi_ssid" id="wifi_ssid" value="{{ config.wifi_ssid or '' }}">
 
-            <label>Password</label>
-            <input type="text" id="wifi_password" name="wifi_password">
+              <label>Password Wi-Fi</label>
+              <input type="password" name="wifi_password" id="wifi_password" value="{{ config.wifi_password or '' }}">
 
-            <label>Sicurezza</label>
-            <select id="wifi_security" name="wifi_security">
-              <option value="WPA">WPA/WPA2</option>
-              <option value="WEP">WEP</option>
-              <option value="nopass">Nessuna password</option>
-            </select>
+              <label>Sicurezza Wi-Fi</label>
+              <select name="wifi_security" id="wifi_security">
+                <option value="WPA" {% if (config.wifi_security or 'WPA') == 'WPA' %}selected{% endif %}>WPA/WPA2</option>
+                <option value="WEP" {% if config.wifi_security == 'WEP' %}selected{% endif %}>WEP</option>
+                <option value="nopass" {% if config.wifi_security == 'nopass' %}selected{% endif %}>Nessuna password</option>
+              </select>
+
+              <button type="submit">Salva Wi-Fi</button>
+            </form>
 
             <div style="text-align:center; margin:16px 0;">
               <img id="wifiQrImg" alt="QR Wi-Fi"

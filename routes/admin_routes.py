@@ -734,6 +734,33 @@ def register_admin_routes(app,
     def build_wifi_qr_string(ssid, password, security="WPA"):
         return f"WIFI:T:{security};S:{ssid};P:{password};;"
 
+    @app.route("/admin/wifi-config", methods=["POST"])
+    def admin_wifi_config():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        wifi_ssid = request.form.get("wifi_ssid", "").strip()
+        wifi_password = request.form.get("wifi_password", "").strip()
+        wifi_security = request.form.get("wifi_security", "WPA").strip() or "WPA"
+
+        if not wifi_ssid:
+            return jsonify({"success": False, "message": "SSID Wi-Fi obbligatorio"}), 400
+
+        if wifi_security not in {"WPA", "WEP", "nopass"}:
+            return jsonify({"success": False, "message": "Sicurezza Wi-Fi non valida"}), 400
+
+        if wifi_security != "nopass" and not wifi_password:
+            return jsonify({"success": False, "message": "Password Wi-Fi obbligatoria"}), 400
+
+        config_service.save_config({
+            "wifi_ssid": wifi_ssid,
+            "wifi_password": wifi_password,
+            "wifi_security": wifi_security,
+        })
+
+        return jsonify({"success": True, "message": "Configurazione Wi-Fi aggiornata"})    
+   
+   
     @app.route("/admin/qr-wifi-info", methods=["GET"])
     def admin_qr_wifi_info():
         if not admin_required():
@@ -770,6 +797,7 @@ def register_admin_routes(app,
             return send_file(buffer, mimetype="image/png")
         except Exception as e:
             return jsonify({"success": False, "message": f"Errore QR Wi-Fi: {str(e)}"}), 500
+
 
     @app.route("/admin/qr-wifi-download", methods=["GET"])
     def admin_qr_wifi_download():

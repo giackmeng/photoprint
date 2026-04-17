@@ -92,6 +92,27 @@ window.AdminApp.bindQuotaQr = function () {
 
 window.resetQuota = window.AdminApp.resetQuota;
 
+window.AdminApp.bindWifiForm = function () {
+  document.getElementById("wifiForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const fd = new FormData(e.target);
+
+    const res = await fetch("/admin/wifi-config", {
+      method: "POST",
+      body: fd
+    });
+
+    const data = await res.json();
+    window.AdminApp.setStatus(data.message || "Configurazione Wi-Fi salvata");
+
+    if (data.success) {
+      window.AdminApp.loadWifiQrInfo();
+      window.AdminApp.loadWifiQr();
+    }
+  });
+};
+
 window.AdminApp.loadWifiQrInfo = async function () {
   try {
     const response = await fetch("/admin/qr-wifi-info");
@@ -99,9 +120,13 @@ window.AdminApp.loadWifiQrInfo = async function () {
 
     if (!data.success) return;
 
-    document.getElementById("wifi_ssid").value = data.wifi_ssid || "";
-    document.getElementById("wifi_password").value = data.wifi_password || "";
-    document.getElementById("wifi_security").value = data.wifi_security || "WPA";
+    const ssid = document.getElementById("wifi_ssid");
+    const password = document.getElementById("wifi_password");
+    const security = document.getElementById("wifi_security");
+
+    if (ssid) ssid.value = data.wifi_ssid || "";
+    if (password) password.value = data.wifi_password || "";
+    if (security) security.value = data.wifi_security || "WPA";
   } catch (e) {
     console.error(e);
   }

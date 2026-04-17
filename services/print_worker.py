@@ -8,12 +8,47 @@ class PrintWorker:
         self.job_manager = job_manager
         self.image_service = image_service
         self.config_service = config_service
-        self.thread = threading.Thread(target=self.worker, daemon=True)
+        self.worker_thread = None
 
-    def start(self) -> None:
-        self.thread.start()
+    def start(self):
+        if self.worker_thread and self.worker_thread.is_alive():
+            return
 
-    def worker(self) -> None:
+        self.worker_thread = threading.Thread(target=self._worker_loop, daemon=True)
+        self.worker_thread.start()
+
+    def build_lp_command(self, printer_name, processed_path, copies, print_format):
+        cmd = [
+            "lp",
+            "-d", printer_name,
+            "-n", str(copies),
+            "-o", "ColorModel=RGB",
+            "-o", "StpiShrinkOutput=Shrink",
+            "-o", "StpLaminate=Glossy",
+        ]
+
+        if print_format == "strip":
+            cmd += [
+                "-o", "PageSize=w288h432-div2",
+            ]
+        else:
+            cmd += [
+                "-o", "PageSize=w288h432",
+            ]
+
+        cmd.append(processed_path)
+        return cmd
+
+    def _extract_printer_job_id(self, stdout):
+        if not stdout:
+            return None
+
+        for token in stdout.split():
+            if "-" in token and "(" not in token:
+                return token
+        return None
+
+    def _worker_loop(self):
         while True:
             job_id = self.job_manager.print_queue.get()
             config = self.config_service.load_config()
@@ -41,34 +76,45 @@ class PrintWorker:
                     message="Preparazione e stampa in corso",
                 )
 
+                original_path = job.get("original_path")
+                processed_path = job.get("processed_path")
+                print_format = job.get("print_format", "10x15")
+                copies = int(job.get("copies", 1))
+
                 self.image_service.prepare_image(
-                    input_path=job.get("original_path"),
-                    output_path=job["processed_path"],
-                    print_format=job["print_format"],
+                    input_path=original_path,
+                    output_path=processed_path,
+                    print_format=print_format,
                     config=config,
-                    input_paths=job.get("original_paths", []),
+                )
+
+                job = self.job_manager.get_job(job_id)
+                if job and job.get("cancelled"):
+                    self.job_manager.update_job(
+                        job_id,
+                        status="error",
+                        message="Job annullato",
+                        completed_at=time.time(),
+                    )
+                    self.job_manager.print_queue.task_done()
+                    continue
+
+                lp_cmd = self.build_lp_command(
+                    printer_name=config["printer_name"],
+                    processed_path=processed_path,
+                    copies=copies,
+                    print_format=print_format,
                 )
 
                 result = subprocess.run(
-                    [
-                        "lp",
-                        "-d", config["printer_name"],
-                        "-n", str(job["copies"]),
-                        job["processed_path"]
-                    ],
+                    lp_cmd,
                     capture_output=True,
                     text=True,
-                    check=True,
+                    check=True
                 )
 
-                stdout = result.stdout.strip()
-                printer_job_id = None
-
-                if stdout:
-                    for token in stdout.split():
-                        if "-" in token and "(" not in token:
-                            printer_job_id = token
-                            break
+                stdout = (result.stdout or "").strip()
+                printer_job_id = self._extract_printer_job_id(stdout)
 
                 self.job_manager.update_job(
                     job_id,
@@ -79,11 +125,12 @@ class PrintWorker:
                 )
 
             except subprocess.CalledProcessError as e:
+                err = (e.stderr or e.stdout or "").strip() or "Errore stampa"
                 self.job_manager.update_job(
                     job_id,
                     status="error",
                     completed_at=time.time(),
-                    message=e.stderr.strip() if e.stderr else "Errore stampa",
+                    message=err,
                 )
 
             except Exception as e:

@@ -60,6 +60,7 @@ window.addEventListener("DOMContentLoaded", () => {
   window.AdminApp.loadTemplateBoxesSelector();
   window.AdminApp.loadQuotaConfig();
   window.AdminApp.loadEventQr();
+  window.AdminApp.bindWifiForm();
   window.AdminApp.loadWifiQrInfo();
   window.AdminApp.loadWifiQr();
 });
