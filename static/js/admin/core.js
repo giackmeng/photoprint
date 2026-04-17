@@ -82,3 +82,30 @@ window.AdminApp.snapValue = function (value, grid = window.AdminApp.state.GRID_S
 
 window.showSection = window.AdminApp.showSection;
 window.showSectionGroup = window.AdminApp.showSectionGroup;
+
+window.AdminApp.loadCurrentWifi = async function () {
+  const el = document.getElementById("currentWifiInfo");
+  const ssidInput = document.getElementById("wifi_ssid");
+
+  try {
+    const response = await fetch("/admin/current-wifi");
+    const data = await response.json();
+
+    if (!data.success) {
+      if (el) el.textContent = "Rete attuale: errore lettura";
+      return;
+    }
+
+    if (data.connected && data.ssid) {
+      if (el) el.textContent = "Rete attuale: " + data.ssid;
+
+      if (ssidInput && !ssidInput.value.trim()) {
+        ssidInput.value = data.ssid;
+      }
+    } else {
+      if (el) el.textContent = "Rete attuale: non connesso";
+    }
+  } catch (e) {
+    if (el) el.textContent = "Rete attuale: errore";
+  }
+};

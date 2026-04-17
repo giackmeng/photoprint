@@ -4,6 +4,7 @@ import json
 import base64
 import socket
 import qrcode
+import subprocess
 from io import BytesIO
 from datetime import datetime
 
@@ -823,3 +824,82 @@ def register_admin_routes(app,
             return send_file(buffer, mimetype="image/png", as_attachment=True, download_name=filename)
         except Exception as e:
             return jsonify({"success": False, "message": f"Errore QR Wi-Fi: {str(e)}"}), 500     
+
+
+    @app.route("/admin/printers", methods=["GET"])
+    def admin_printers():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        try:
+            result = subprocess.run(
+                ["lpstat", "-p"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+
+            printers = []
+            for line in (result.stdout or "").splitlines():
+                line = line.strip()
+                # esempio: "printer DNP_RX1 is idle.  enabled since ..."
+                if line.startswith("printer "):
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        printers.append(parts[1])
+
+            current_printer = config_service.load_config().get("printer_name", "")
+
+            return jsonify({
+                "success": True,
+                "printers": printers,
+                "current_printer": current_printer
+            })
+
+        except subprocess.CalledProcessError as e:
+            return jsonify({
+                "success": False,
+                "message": (e.stderr or e.stdout or "Errore lettura stampanti CUPS").strip()
+            }), 500
+
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Errore lettura stampanti: {str(e)}"
+            }), 500   
+
+    def get_current_wifi_ssid():
+        commands = [
+            ["iwgetid", "-r"],
+            ["bash", "-lc", "nmcli -t -f active,ssid dev wifi | grep '^yes:' | cut -d: -f2-"],
+            ["bash", "-lc", "iw dev wlan0 link | grep SSID | sed 's/^.*SSID: //'"],
+        ]
+
+        for cmd in commands:
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+                ssid = (result.stdout or "").strip()
+                if ssid:
+                    return ssid
+            except Exception:
+                pass
+
+        return ""     
+    
+    @app.route("/admin/current-wifi", methods=["GET"])
+    def admin_current_wifi():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        try:
+            ssid = get_current_wifi_ssid()
+            return jsonify({
+                "success": True,
+                "connected": bool(ssid),
+                "ssid": ssid
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "message": f"Errore lettura SSID: {str(e)}"
+            }), 500

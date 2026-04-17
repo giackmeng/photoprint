@@ -63,6 +63,9 @@ window.addEventListener("DOMContentLoaded", () => {
   window.AdminApp.bindWifiForm();
   window.AdminApp.loadWifiQrInfo();
   window.AdminApp.loadWifiQr();
+  window.AdminApp.loadPrinters();
+  window.AdminApp.bindPrinterRefresh?.();
+  window.AdminApp.loadCurrentWifi();
 });
 
 window.AdminApp.bindMobileSidebar = function () {
@@ -81,5 +84,50 @@ window.AdminApp.bindMobileSidebar = function () {
         sidebar.classList.remove("mobile-open");
       }
     });
+  });
+};
+
+window.AdminApp.loadPrinters = async function () {
+  const select = document.getElementById("printer_name");
+  if (!select) return;
+
+  try {
+    const response = await fetch("/admin/printers");
+    const data = await response.json();
+
+    if (!data.success) {
+      window.AdminApp.setStatus(data.message || "Errore caricamento stampanti");
+      select.innerHTML = `<option value="">Nessuna stampante trovata</option>`;
+      return;
+    }
+
+    select.innerHTML = "";
+
+    if (!data.printers.length) {
+      select.innerHTML = `<option value="">Nessuna stampante disponibile</option>`;
+      return;
+    }
+
+    data.printers.forEach(printer => {
+      const opt = document.createElement("option");
+      opt.value = printer;
+      opt.textContent = printer;
+
+      if (printer === data.current_printer) {
+        opt.selected = true;
+      }
+
+      select.appendChild(opt);
+    });
+
+  } catch (e) {
+    select.innerHTML = `<option value="">Errore caricamento stampanti</option>`;
+    window.AdminApp.setStatus("Errore di connessione caricando le stampanti CUPS");
+  }
+};
+
+window.AdminApp.bindPrinterRefresh = function () {
+  document.getElementById("refreshPrintersBtn")?.addEventListener("click", () => {
+    window.AdminApp.loadPrinters();
   });
 };

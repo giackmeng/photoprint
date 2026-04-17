@@ -66,8 +66,12 @@
           <div class="card admin-section" id="section-config">
             <h3>Configurazione evento</h3>
             <form id="configForm">
-              <label>Nome stampante</label>
-              <input name="printer_name" value="{{ config.printer_name }}" required>
+              <label>Stampanti disponibili</label>
+              <!--<input name="printer_name" value="{{ config.printer_name }}" required>-->
+              <select name="printer_name" id="printer_name" required>
+                <option value="">Caricamento stampanti...</option>
+              </select>
+              <button type="button" class="muted" id="refreshPrintersBtn">Aggiorna stampanti</button>  
 
               <label>Brand</label>
               <input name="brand_name" value="{{ config.brand_name }}" required>
@@ -314,6 +318,7 @@
             <h3>Configurazione Wi-Fi</h3>
 
            <form id="wifiForm">
+            <div class="helper" id="currentWifiInfo">Rete attuale: —</div>
               <label>SSID Wi-Fi</label>
               <input type="text" name="wifi_ssid" id="wifi_ssid" value="{{ config.wifi_ssid or '' }}">
 
