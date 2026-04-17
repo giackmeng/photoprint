@@ -1,0 +1,61 @@
+{
+  "default_limit_per_identity": 3,
+  "event_code": "EVENTO2026",
+  "records": {
+    "34072e1d4466761220674471ac59cef1babcac4c945a19774da16d932d32493a": {
+      "prints_used": 0,
+      "created_at": "2026-04-16T16:21:14.928828",
+      "updated_at": "2026-04-16T19:04:40.742082",
+      "meta": {
+        "ip": "10.117.218.239",
+        "mac": "f8:5e:a0:ad:e5:67",
+        "browser_token": "78512e84c22140b28726e7b419df5fe2",
+        "event_code": "EVENTO2026"
+      }
+    },
+    "43fc5d7864931f3cafe7acbfac1ee6aa18acbc1314ce80f48e9e4c008ffaf1a3": {
+      "prints_used": 0,
+      "created_at": "2026-04-16T16:23:48.597541",
+      "updated_at": "2026-04-16T19:04:40.266905",
+      "meta": {
+        "ip": "10.117.218.42",
+        "mac": "1e:1a:1e:e5:0d:15",
+        "browser_token": "70943c2537c743fcab66749f224a7b00",
+        "event_code": "EVENTO2026"
+      }
+    },
+    "8cbba67f1c801423ab33229c433a61e7c35c97f2af5cdd875117a56409a9d0b3": {
+      "prints_used": 0,
+      "created_at": "2026-04-16T16:56:51.219887",
+      "updated_at": "2026-04-16T19:04:39.457398",
+      "meta": {
+        "ip": "10.221.39.70",
+        "mac": null,
+        "browser_token": "0e0f98fe694848dd85ff081ba7c6ed4b",
+        "event_code": "EVENTO240"
+      }
+    },
+    "fe8a9d761c6cba7c5cec8050dc41c36bddd7a3007888c4d240f27856821bb6b7": {
+      "prints_used": 0,
+      "created_at": "2026-04-16T17:02:37.761426",
+      "updated_at": "2026-04-16T19:04:38.315766",
+      "meta": {
+        "ip": "10.221.39.70",
+        "mac": null,
+        "browser_token": "0e0f98fe694848dd85ff081ba7c6ed4b",
+        "event_code": "EVENTO200"
+      }
+    },
+    "e994e0f5e7880ad18c4f593b40ce46a5047391e4524ca72d521d450757436b93": {
+      "prints_used": 1,
+      "created_at": "2026-04-16T21:21:28.168922",
+      "updated_at": "2026-04-16T21:21:28.169013",
+      "meta": {
+        "ip": "192.168.0.12",
+        "mac": "ca:ab:50:3f:93:2b",
+        "browser_token": "acbefbce9dc344389d8a5ab6fa877edf",
+        "event_code": "EVENTO2026"
+      }
+    }
+  }
+}

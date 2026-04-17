@@ -30,6 +30,7 @@ def register_admin_routes(app,
      device_limit_service,
      device_identity_service,
      print_quota_service,
+
      ):
     @app.route("/admin/login", methods=["GET", "POST"])
     def admin_login():
@@ -97,6 +98,9 @@ def register_admin_routes(app,
             return jsonify({"success": False, "message": "Non autorizzato"}), 403
 
         data = {
+            "wifi_ssid": request.form.get("wifi_ssid", "").strip(),
+            "wifi_password": request.form.get("wifi_password", "").strip(),
+            "wifi_security": request.form.get("wifi_security", "WPA").strip() or "WPA",
             "printer_name": request.form.get("printer_name", "").strip(),
             "brand_name": request.form.get("brand_name", "").strip(),
             "brand_tagline": request.form.get("brand_tagline", "").strip(),
@@ -726,4 +730,68 @@ def register_admin_routes(app,
         except Exception as e:
             return jsonify({"success": False, "message": f"Errore generazione QR: {str(e)}"}), 500
 
-        
+
+    def build_wifi_qr_string(ssid, password, security="WPA"):
+        return f"WIFI:T:{security};S:{ssid};P:{password};;"
+
+    @app.route("/admin/qr-wifi-info", methods=["GET"])
+    def admin_qr_wifi_info():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        config = config_service.load_config()
+        return jsonify({
+            "success": True,
+            "wifi_ssid": config.get("wifi_ssid", ""),
+            "wifi_password": config.get("wifi_password", ""),
+            "wifi_security": config.get("wifi_security", "WPA")
+        })
+
+    @app.route("/admin/qr-wifi-image", methods=["GET"])
+    def admin_qr_wifi_image():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        config = config_service.load_config()
+        ssid = config.get("wifi_ssid", "")
+        password = config.get("wifi_password", "")
+        security = config.get("wifi_security", "WPA")
+
+        if not ssid:
+            return jsonify({"success": False, "message": "SSID Wi-Fi mancante"}), 400
+
+        wifi_data = build_wifi_qr_string(ssid, password, security)
+
+        try:
+            img = qrcode.make(wifi_data)
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+            return send_file(buffer, mimetype="image/png")
+        except Exception as e:
+            return jsonify({"success": False, "message": f"Errore QR Wi-Fi: {str(e)}"}), 500
+
+    @app.route("/admin/qr-wifi-download", methods=["GET"])
+    def admin_qr_wifi_download():
+        if not admin_required():
+            return jsonify({"success": False, "message": "Non autorizzato"}), 403
+
+        config = config_service.load_config()
+        ssid = config.get("wifi_ssid", "")
+        password = config.get("wifi_password", "")
+        security = config.get("wifi_security", "WPA")
+
+        if not ssid:
+            return jsonify({"success": False, "message": "SSID Wi-Fi mancante"}), 400
+
+        wifi_data = build_wifi_qr_string(ssid, password, security)
+
+        try:
+            img = qrcode.make(wifi_data)
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+            filename = f"wifi_qr_{ssid}.png"
+            return send_file(buffer, mimetype="image/png", as_attachment=True, download_name=filename)
+        except Exception as e:
+            return jsonify({"success": False, "message": f"Errore QR Wi-Fi: {str(e)}"}), 500     
